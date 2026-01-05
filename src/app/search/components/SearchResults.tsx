@@ -500,6 +500,42 @@ export default function SearchResults({
                   daycares, and get personalized recommendations.
                 </p>
 
+                {/* --- INSERT START (Around Line 465) --- */}
+                <div className="max-w-md mx-auto mb-10 p-6 bg-white rounded-3xl border-4 border-yellow-400 shadow-xl relative text-left">
+                  <div className="absolute -top-4 -right-2 bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black shadow-lg uppercase">
+                    ONLY 100 SPOTS
+                  </div>
+                  <div className="text-center mb-4">
+                    <h4 className="text-xl font-black text-gray-900">Auto Apply Feature</h4>
+                    <p className="text-green-600 font-bold flex items-center justify-center gap-2 text-xs">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      Claim Your Free Access after our Beta Launch!
+                    </p>
+                  </div>
+                  <ul className="space-y-2 mb-6">
+                    {[
+                      "Submit to 30 daycares at once",
+                      "Automated follow-up reminders",
+                      "Compare daycares side-by-side",
+                      "Smart follow-up scheduling",
+                      "Application tracking dashboard"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-3 text-gray-700 font-semibold text-xs">
+                        <div className="mt-0.5 bg-green-100 rounded-full p-0.5">
+                          <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/register" className="block w-full py-3 rounded-xl text-white text-center font-black bg-gradient-to-r from-blue-600 to-purple-600 shadow-md text-sm">
+                    CLAIM MY FREE SPOT
+                  </Link>
+                  <p className="text-center text-[10px] text-gray-400 mt-3 font-bold uppercase tracking-tight">
+                    🚀 NO PAYMENT REQUIRED
+                  </p>
+                </div>
+                {/* --- INSERT END --- */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <Link
                     href="/register"

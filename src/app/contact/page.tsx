@@ -237,26 +237,6 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                      <Clock className="w-6 h-6 text-orange-600" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                      Business Hours
-                    </h3>
-                    <div className="text-gray-600 mb-2 space-y-1">
-                      <p>Monday - Friday: 9:00 AM - 6:00 PM EST</p>
-                      <p>Saturday: 10:00 AM - 2:00 PM EST</p>
-                      <p>Sunday: Closed</p>
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      Emergency support available 24/7
-                    </p>
-                  </div>
-                </div>
               </div>
 
               {/* FAQ Section */}
@@ -309,12 +289,47 @@ export default function ContactPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl font-bold text-white mb-4">
-              Need Immediate Assistance?
+              Ready to Start your Search?
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              For urgent matters, contact us directly or use our live chat feature
-              during business hours.
+              Browse daycares, read authentic reviews, and make informed decisions for your child's early education journey.
             </p>
+            {/* --- INSERT START (Around Line 465) --- */}
+            <div className="max-w-md mx-auto mb-10 p-6 bg-white rounded-3xl border-4 border-yellow-400 shadow-xl relative text-left">
+              <div className="absolute -top-4 -right-2 bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black shadow-lg uppercase">
+                ONLY 100 SPOTS
+              </div>
+              <div className="text-center mb-4">
+                <h4 className="text-xl font-black text-gray-900">Auto Apply Feature</h4>
+                <p className="text-green-600 font-bold flex items-center justify-center gap-2 text-xs">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  Claim Your Free Access after our Beta Launch!
+                </p>
+              </div>
+              <ul className="space-y-2 mb-6">
+                {[
+                  "Submit applications to 30 daycares at once",
+                  "Automated follow-up reminders",
+                  "Compare daycares side-by-side",
+                  "Smart follow-up scheduling",
+                  "Application tracking dashboard"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-gray-700 font-semibold text-xs">
+                    <div className="mt-0.5 bg-green-100 rounded-full p-0.5">
+                      <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/register" className="block w-full py-3 rounded-xl text-white text-center font-black bg-gradient-to-r from-blue-600 to-purple-600 shadow-md text-sm">
+                CLAIM MY FREE SPOT
+              </Link>
+              <p className="text-center text-[10px] text-gray-400 mt-3 font-bold uppercase tracking-tight">
+                🚀 NO PAYMENT REQUIRED
+              </p>
+            </div>
+            {/* --- INSERT END --- */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/search"
@@ -370,17 +385,6 @@ export default function ContactPage() {
                   We typically respond within 24 hours
                 </p>
               </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Business Hours</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>Monday - Friday: 9:00 AM - 6:00 PM EST</li>
-                <li>Saturday: 10:00 AM - 2:00 PM EST</li>
-                <li>Sunday: Closed</li>
-                <li className="text-sm text-gray-500 mt-3">
-                  Emergency support available 24/7
-                </li>
-              </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
