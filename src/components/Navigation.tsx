@@ -24,7 +24,6 @@ export default function Navigation() {
   const { user, logout } = useAuth();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Get dashboard URL based on user type
   const getDashboardUrl = () => {
     if (!user) return "/dashboard";
     switch (user.userType) {
