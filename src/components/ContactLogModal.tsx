@@ -144,7 +144,7 @@ export default function ContactLogModal({
       return searchDaycaresResponse?.data || [];
     } else {
       // For default results, sort to show favorites first
-      const defaultDaycares = defaultDaycaresResponse?.data || [];
+      const defaultDaycares: Daycare[] = defaultDaycaresResponse?.data || [];
       if (favoriteIds.length === 0 || defaultDaycares.length === 0) {
         return defaultDaycares;
       }
@@ -153,7 +153,7 @@ export default function ContactLogModal({
       const favoritesList: Daycare[] = [];
       const nonFavoritesList: Daycare[] = [];
 
-      defaultDaycares.forEach((daycare: Daycare) => {
+      defaultDaycares.forEach((daycare) => {
         const daycareId = daycare._id || daycare.id;
         if (favoriteIds.includes(daycareId)) {
           favoritesList.push(daycare);
