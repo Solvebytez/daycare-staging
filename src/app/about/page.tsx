@@ -128,84 +128,14 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl p-8"
-            >
-              <div className="text-center">
-                <div className="text-6xl mb-4">🏠</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Building Trust
-                </h3>
-                <p className="text-gray-600">
-                  We verify every KinderBridge location, read through parent
-                  reviews, and ensure safety standards are met before listing
-                  them on our platform.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Meet Our Team
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              The passionate people behind KinderBridge who are dedicated to
-              making a difference in families&apos; lives.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {team.map((member, index) => (
-              <motion.div
-                key={member.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center"
-              >
-                <div className="w-24 h-24 mx-auto mb-4">
-                  {member.image ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={member.image}
-                      alt={`${member.name} - ${member.role}`}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <ImagePlaceholder
-                      width={96}
-                      height={96}
-                      type="team"
-                      className="w-full h-full rounded-full"
-                      alt={`${member.name} - ${member.role}`}
-                    />
-                  )}
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                  {member.name}
-                </h3>
-                <p className="text-blue-600 font-medium mb-3">{member.role}</p>
-                <p className="text-gray-600">{member.bio}</p>
-              </motion.div>
-            ))}
+              // className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl p-8"
+            ></motion.div>
           </div>
         </div>
       </section>
 
       {/* Story Section */}
-      <section className="py-16 bg-white">
+      <section className="py-1 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -222,8 +152,8 @@ export default function AboutPage() {
                     Our Story
                   </h3>
                   <p className="text-gray-600">
-                    Founded in 2020, DayCare Concierge started as a small team
-                    of parents and educators who experienced firsthand the
+                    Founded in 2026, KinderBridge started as a small team of
+                    parents and educators who experienced firsthand the
                     challenges of finding quality childcare.
                   </p>
                 </div>
@@ -241,15 +171,16 @@ export default function AboutPage() {
                 How It All Started
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                Srinisha, our Co-founder, is a student mother. struggling to
-                find reliable, quality childcare for her kid. After months of
+                Our Co-founder, is a student mother. struggling to find
+                reliable, quality childcare for her kid. After months of
                 research, phone calls, and visits, she realized there had to be
                 a better way.
               </p>
               <p className="text-lg text-gray-600 mb-6">
-                She teamed up with Abhishek and Ashvak, who shared her vision of
-                creating a platform that would make the KinderBridge search
-                process transparent, efficient, and trustworthy.
+                She teamed up with an Operational and Product expert, who shared
+                her vision of creating a platform that would make the
+                KinderBridge search process transparent, efficient, and
+                trustworthy.
               </p>
               <p className="text-lg text-gray-600">
                 Today, we are proud to have created a platform that is ready to
@@ -277,13 +208,15 @@ export default function AboutPage() {
               Join thousands of parents who have found their ideal daycare
               location through our platform.
             </p>
-            {/* Auto Apply Feature Promotional Card - Added by Abhishek */}
+            {/* --- INSERT START (Around Line 465) --- */}
             <div className="max-w-md mx-auto mb-10 p-6 bg-white rounded-3xl border-4 border-yellow-400 shadow-xl relative text-left">
               <div className="absolute -top-4 -right-2 bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black shadow-lg uppercase">
                 ONLY 100 SPOTS
               </div>
               <div className="text-center mb-4">
-                <h4 className="text-xl font-black text-gray-900">Auto Apply Feature</h4>
+                <h4 className="text-xl font-black text-gray-900">
+                  Auto Apply Feature
+                </h4>
                 <p className="text-green-600 font-bold flex items-center justify-center gap-2 text-xs">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                   Claim Your Free Access after our Beta Launch!
@@ -295,23 +228,42 @@ export default function AboutPage() {
                   "Automated follow-up reminders",
                   "Compare daycares side-by-side",
                   "Smart follow-up scheduling",
-                  "Application tracking dashboard"
+                  "Application tracking dashboard",
                 ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-gray-700 font-semibold text-xs">
+                  <li
+                    key={i}
+                    className="flex items-start gap-3 text-gray-700 font-semibold text-xs"
+                  >
                     <div className="mt-0.5 bg-green-100 rounded-full p-0.5">
-                      <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                      <svg
+                        className="w-3 h-3 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="3"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
                     </div>
                     {item}
                   </li>
                 ))}
               </ul>
-              <Link href="/register" className="block w-full py-3 rounded-xl text-white text-center font-black bg-gradient-to-r from-blue-600 to-purple-600 shadow-md text-sm">
+              <Link
+                href="/register"
+                className="block w-full py-3 rounded-xl text-white text-center font-black bg-gradient-to-r from-blue-600 to-purple-600 shadow-md text-sm"
+              >
                 CLAIM MY FREE SPOT
               </Link>
               <p className="text-center text-[10px] text-gray-400 mt-3 font-bold uppercase tracking-tight">
                 🚀 NO PAYMENT REQUIRED
               </p>
             </div>
+            {/* --- INSERT END --- */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/register"
@@ -374,20 +326,12 @@ export default function AboutPage() {
                 </p>
               </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Business Hours</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>Monday - Friday: 9:00 AM - 6:00 PM EST</li>
-                <li>Saturday: 10:00 AM - 2:00 PM EST</li>
-                <li>Sunday: Closed</li>
-                <li className="text-sm text-gray-500 mt-3">
-                  Emergency support available 24/7
-                </li>
-              </ul>
-            </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} KinderBridge. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} KinderBridge. All rights
+              reserved.
+            </p>
             <div className="mt-2 flex justify-center items-center space-x-2">
               <span className="text-xs text-gray-500">
                 Developed by ASH Web Solutions
@@ -413,6 +357,76 @@ export default function AboutPage() {
                   />
                 </svg>
               </a>
+            </div>
+          </div>
+        </div>
+        {/* Updated KinderBridge Disclaimer */}
+        <div className="mt-12 pt-8 border-t border-gray-800">
+          <div className="bg-blue-900/20 rounded-2xl p-6 border border-blue-800/40">
+            <div className="flex gap-4 items-start">
+              <div className="flex-shrink-0 mt-1">
+                <svg
+                  className="w-6 h-6 text-orange-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400 leading-relaxed space-y-4">
+                <p>
+                  <span className="font-bold text-gray-300">Disclaimer:</span>{" "}
+                  Every effort is made to ensure that the information on{" "}
+                  <span className="text-blue-400 font-medium">
+                    KinderBridge
+                  </span>{" "}
+                  is accurate, up-to-date, and comprehensive. However,{" "}
+                  <span className="font-bold text-gray-300">
+                    KinderBridge cannot assume liability resulting from errors
+                    or omissions.
+                  </span>{" "}
+                  Inclusion or omission of a program or service is not a comment
+                  on its quality.
+                </p>
+                <p>
+                  Records in this database are compiled from publicly available
+                  sources including government open data portals, Google Maps,
+                  and individual daycare websites. KinderBridge cannot be held
+                  responsible for the accuracy of information provided by these
+                  external sources.{" "}
+                  <span className="font-bold text-gray-300">
+                    Users are urged to confirm all information independently
+                  </span>{" "}
+                  with daycare providers.
+                </p>
+                <p>
+                  KinderBridge is{" "}
+                  <span className="font-bold text-gray-300">
+                    not affiliated with, endorsed by, or partnered with
+                  </span>{" "}
+                  any daycare centers, childcare providers, or government
+                  agencies. Waitlist positions and availability estimates may
+                  not reflect real-time status. If you have questions, please
+                  see our{" "}
+                  <Link href="/terms" className="text-blue-400 hover:underline">
+                    Terms of Use
+                  </Link>{" "}
+                  or{" "}
+                  <Link
+                    href="/contact"
+                    className="text-blue-400 hover:underline"
+                  >
+                    contact us
+                  </Link>
+                  .
+                </p>
+              </div>
             </div>
           </div>
         </div>
