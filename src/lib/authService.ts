@@ -81,3 +81,54 @@ export async function resetPassword(
   }
 }
 
+/**
+ * Verify email address using token
+ * @param token - Verification token from URL
+ * @returns Promise with verification status
+ */
+export async function verifyEmail(token: string): Promise<{
+  success: boolean;
+  data?: { email: string; verified: boolean; alreadyVerified?: boolean };
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const response = await apiClient.get(`/api/auth/verify-email/${token}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Email verification error:", error);
+    return {
+      success: false,
+      error:
+        error.response?.data?.error ||
+        "Invalid or expired verification token",
+    };
+  }
+}
+
+/**
+ * Resend verification email
+ * @param email - User email address
+ * @returns Promise with success status
+ */
+export async function resendVerificationEmail(email: string): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const response = await apiClient.post("/api/auth/resend-verification", {
+      email,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Resend verification error:", error);
+    return {
+      success: false,
+      error:
+        error.response?.data?.error ||
+        "Failed to send verification email. Please try again.",
+    };
+  }
+}
+

@@ -173,11 +173,11 @@ export default function LoginPage() {
           window.location.href = redirectUrl;
           return;
         }
-      } else {
-        setError("Invalid email or password");
       }
     } catch (error) {
-      setError("An error occurred during login");
+      // Display the error message from the API or a generic message
+      const errorMessage = error instanceof Error ? error.message : "An error occurred during login";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -293,7 +293,19 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <p className="text-red-800 text-sm text-center">{error}</p>
+              {error.toLowerCase().includes("verify") && (
+                <div className="mt-3 text-center">
+                  <Link
+                    href={`/verify-email?email=${encodeURIComponent(email)}`}
+                    className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+                  >
+                    Resend verification email
+                  </Link>
+                </div>
+              )}
+            </div>
           )}
 
           <div>

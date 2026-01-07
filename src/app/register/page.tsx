@@ -201,20 +201,20 @@ export default function RegisterPage() {
         );
         console.log("✅ [REGISTER] User email:", user.email);
 
-        // Tokens are stored in httpOnly cookies automatically by the backend
-        // No need to store tokens in localStorage
+        // User is NOT logged in - they must verify email first
+        // No tokens are generated until email is verified
 
-        // Show success message with user info
+        // Show success message
         toast.success(
-          `Registration successful! Welcome ${user.firstName || user.email}.`,
+          `Registration successful! Please check your email to verify your account.`,
           {
-            duration: 2000,
+            duration: 3000,
           }
         );
 
-        // Redirect to search page - cookies are set by backend
-        // The search page will check auth on mount and show user dropdown
-        window.location.href = "/search";
+        // Redirect to register-success page with email parameter (not logged in yet)
+        const userEmail = user.email || "";
+        window.location.href = `/register-success${userEmail ? `?email=${encodeURIComponent(userEmail)}` : ""}`;
         // Reset flag (though we're doing full page reload, so this won't matter)
         setIsRegistering(false);
       },

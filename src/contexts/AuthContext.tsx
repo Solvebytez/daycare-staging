@@ -179,15 +179,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           "Login failed:",
           response.data.message || response.data.error
         );
-        return false;
+        // Throw error with message so login page can display it
+        const errorMessage = response.data.message || response.data.error || "Login failed";
+        throw new Error(errorMessage);
       }
     } catch (error: unknown) {
       console.error("🔧 DEBUG: Login axios error:", error);
       if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as { response?: { data?: unknown } };
+        const axiosError = error as { 
+          response?: { 
+            data?: { 
+              message?: string; 
+              error?: string;
+              details?: { requiresVerification?: boolean };
+            };
+            status?: number;
+          } 
+        };
         console.error("🔧 DEBUG: Error response:", axiosError.response?.data);
+        
+        // Extract error message from response
+        const errorMessage = axiosError.response?.data?.message || 
+                            axiosError.response?.data?.error || 
+                            "Login failed";
+        throw new Error(errorMessage);
       }
-      return false;
+      // Re-throw the error so login page can handle it
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -200,11 +218,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await apiClient.post("/api/auth/register", userData);
 
       if (response.data.success) {
-        const { user: newUser } = response.data.data;
+        const { user: newUser, requiresEmailVerification } = response.data.data;
 
-        // Tokens are stored in httpOnly cookies automatically
-        // Set user
-        setUser(newUser);
+        // Do NOT set user or tokens - user must verify email before logging in
+        if (requiresEmailVerification && !newUser?.emailVerified) {
+          console.log("✅ [REGISTER] Registration successful - email verification required");
+          // Don't set user - they need to verify email first
+          return true;
+        }
+
+        // If email is already verified (shouldn't happen on new registration, but handle it)
+        if (newUser?.emailVerified) {
+          setUser(newUser);
+          return true;
+        }
+
+        // Default: don't set user if email not verified
         return true;
       } else {
         console.error("Registration failed:", response.data.error);

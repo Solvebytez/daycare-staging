@@ -90,7 +90,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Skip refresh logic for auth endpoints (verify, refresh, login, register, logout, forgot-password, reset-password)
+    // Skip refresh logic for auth endpoints (verify, refresh, login, register, logout, forgot-password, reset-password, email verification)
     const isAuthEndpoint =
       originalRequest.url?.includes("/api/auth/verify") ||
       originalRequest.url?.includes("/api/auth/refresh") ||
@@ -98,7 +98,9 @@ apiClient.interceptors.response.use(
       originalRequest.url?.includes("/api/auth/register") ||
       originalRequest.url?.includes("/api/auth/logout") ||
       originalRequest.url?.includes("/api/auth/forgot-password") ||
-      originalRequest.url?.includes("/api/auth/reset-password");
+      originalRequest.url?.includes("/api/auth/reset-password") ||
+      originalRequest.url?.includes("/api/auth/verify-email") ||
+      originalRequest.url?.includes("/api/auth/resend-verification");
 
     // If access token expired, try to refresh it (but not for auth endpoints)
     if (

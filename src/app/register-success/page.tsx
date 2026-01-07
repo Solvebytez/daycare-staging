@@ -1,49 +1,28 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../../contexts/AuthContext";
-import { CheckCircle, ArrowRight } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { CheckCircle, Mail } from "lucide-react";
 import Link from "next/link";
 
 export default function RegisterSuccessPage() {
-  const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
-
-  // Get dashboard URL based on user type
-  const getDashboardUrl = useCallback(() => {
-    if (!user) return "/dashboard";
-    switch (user.userType) {
-      case "provider":
-        return "/provider/dashboard";
-      case "parent":
-        return "/parent/dashboard";
-      default:
-        return "/dashboard";
-    }
-  }, [user]);
+  const [email, setEmail] = useState<string>("");
 
   useEffect(() => {
     setMounted(true);
-
-    if (user) {
-      // Redirect to dashboard after 3 seconds
-      const timer = setTimeout(() => {
-        router.push(getDashboardUrl());
-      }, 3000);
-
-      return () => clearTimeout(timer);
+    
+    // Get email from URL parameter if available
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
     }
-  }, [user, router, getDashboardUrl]);
+  }, [searchParams]);
 
   // Wait for component to mount before rendering
   if (!mounted) {
-    return null;
-  }
-
-  if (!user) {
-    router.push("/");
     return null;
   }
 
@@ -58,44 +37,72 @@ export default function RegisterSuccessPage() {
 
           {/* Success Message */}
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Registration Successful! 🎉
+            Registration Successful!
           </h1>
 
           <p className="text-gray-600 mb-6">
-            Welcome to KinderBridge,{" "}
-            <span className="font-semibold">{user.firstName}</span>! Your
-            account has been created successfully.
+            Your account has been created successfully. Please verify your email address to complete your registration and log in.
           </p>
 
-          {/* User Info */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-            <p className="text-sm text-gray-500 mb-1">Account Details:</p>
-            <p className="text-gray-900 font-medium">{user.email}</p>
-            <p className="text-gray-600 text-sm capitalize">
-              {user.userType} Account
-            </p>
+          {/* Email Verification Notice */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Mail className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-blue-800 mb-2">
+                  Verify Your Email Address
+                </h3>
+                <div className="text-sm text-blue-700 space-y-2">
+                  <p>
+                    We've sent a verification email to{" "}
+                    {email ? (
+                      <strong className="font-semibold">{email}</strong>
+                    ) : (
+                      "your email address"
+                    )}.
+                  </p>
+                  <p>
+                    Please check your inbox and click the verification link to activate your account.
+                  </p>
+                  <p className="text-blue-600 font-medium mt-3">
+                    You must verify your email before you can log in.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Redirect Message */}
-          <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <p className="text-blue-800 text-sm">
-              Redirecting to your dashboard in a few seconds...
+          {/* Important Notice */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <p className="text-yellow-800 text-sm">
+              <strong>Important:</strong> After verifying your email, you'll be able to log in to your account.
             </p>
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-3">
+            {email && (
+              <Link
+                href={`/verify-email?email=${encodeURIComponent(email)}`}
+                className="w-full flex items-center justify-center space-x-2 bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                <span>Resend Verification Email</span>
+              </Link>
+            )}
+
             <Link
-              href={getDashboardUrl()}
-              className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              href="/login"
+              className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
             >
-              <span>Go to Dashboard</span>
-              <ArrowRight className="h-4 w-4" />
+              <span>Go to Login</span>
             </Link>
 
             <Link
               href="/"
-              className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              className="w-full flex items-center justify-center space-x-2 text-gray-600 px-6 py-3 rounded-lg font-medium hover:text-gray-800 transition-colors"
             >
               <span>Back to Home</span>
             </Link>
