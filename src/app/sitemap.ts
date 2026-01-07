@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 interface Daycare {
-  _id: string;
+  _id?: string;
   id?: string;
   name: string;
   slug?: string;
@@ -77,17 +77,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (response.ok) {
       const data = await response.json();
-      const daycares: Daycare[] = data.success ? data.data : [];
+      const daycares = data.success ? (data.data as any[]) : [];
 
-      daycarePages = daycares.map((daycare) => {
-        const daycareId = daycare._id || daycare.id || '';
-        return {
-          url: `${baseUrl}/daycare/${daycareId}`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.8,
-        };
-      });
+      daycarePages = daycares
+        .filter((daycare) => daycare._id || daycare.id) // Only include daycares with valid IDs
+        .map((daycare) => {
+          const daycareId = daycare._id || daycare.id || '';
+          return {
+            url: `${baseUrl}/daycare/${daycareId}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+          };
+        });
     } else {
       console.warn('Failed to fetch daycares for sitemap, using fallback');
     }
@@ -96,19 +98,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fallback: try to use static JSON data
     try {
       const daycaresData = await import('@/data/daycares.json');
-      const daycares: Daycare[] = Array.isArray(daycaresData.default) 
-        ? daycaresData.default 
+      const daycares = Array.isArray(daycaresData.default) 
+        ? daycaresData.default as any[]
         : [];
 
-      daycarePages = daycares.map((daycare) => {
-        const daycareId = daycare.id || daycare._id || '';
-        return {
-          url: `${baseUrl}/daycare/${daycareId}`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.8,
-        };
-      });
+      daycarePages = daycares
+        .filter((daycare) => daycare.id || daycare._id) // Only include daycares with valid IDs
+        .map((daycare) => {
+          const daycareId = daycare._id || daycare.id || '';
+          return {
+            url: `${baseUrl}/daycare/${daycareId}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+          };
+        });
     } catch (fallbackError) {
       console.error('Fallback to static data also failed:', fallbackError);
     }
