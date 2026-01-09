@@ -30,16 +30,8 @@ interface FilterPanelProps {
   setSelectedPriceRange: (value: string) => void;
   selectedTypes: string[];
   setSelectedTypes: (value: string[] | ((prev: string[]) => string[])) => void;
-  selectedAgeRange: string[];
-  setSelectedAgeRange: (
-    value: string[] | ((prev: string[]) => string[])
-  ) => void;
-  programAgeOptions: string[];
-  programAgesLoading?: boolean;
-  selectedProgramAges: string[];
-  setSelectedProgramAges: (
-    value: string[] | ((prev: string[]) => string[])
-  ) => void;
+  selectedAgeRange: string;
+  setSelectedAgeRange: (value: string) => void;
   selectedAvailability: string[];
   setSelectedAvailability: (
     value: string[] | ((prev: string[]) => string[])
@@ -101,10 +93,6 @@ export default function FilterPanel({
   setSelectedTypes,
   selectedAgeRange,
   setSelectedAgeRange,
-  programAgeOptions,
-  programAgesLoading = false,
-  selectedProgramAges,
-  setSelectedProgramAges,
   selectedAvailability,
   setSelectedAvailability,
   selectedWard,
@@ -249,8 +237,7 @@ export default function FilterPanel({
   const handleClearFilters = useCallback(() => {
     setSelectedPriceRange("");
     setSelectedTypes([]);
-    setSelectedAgeRange([]);
-    setSelectedProgramAges([]);
+    setSelectedAgeRange("");
     setSelectedAvailability([]);
     setSelectedWard("");
     setCwelccParticipating(false);
@@ -261,7 +248,6 @@ export default function FilterPanel({
     setSelectedPriceRange,
     setSelectedTypes,
     setSelectedAgeRange,
-    setSelectedProgramAges,
     setSelectedAvailability,
     setSelectedWard,
     setCwelccParticipating,
@@ -629,88 +615,27 @@ export default function FilterPanel({
               { value: "Infants", label: "Infants (0-18 months)" },
               { value: "Toddlers", label: "Toddlers (18 months - 3 years)" },
               { value: "Preschool", label: "Preschool (3-5 years)" },
+              { value: "School Age", label: "School-Age (5-12 years)" },
             ].map((range) => (
               <label
                 key={range.value}
                 className="flex items-center space-x-3 cursor-pointer group hover:bg-pink-50 p-2 rounded-lg transition-colors"
               >
                 <input
-                  type="checkbox"
-                  checked={selectedAgeRange.includes(range.value)}
+                  type="radio"
+                  name="ageRange"
+                  value={range.value}
+                  checked={selectedAgeRange === range.value}
                   onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedAgeRange([...selectedAgeRange, range.value]);
-                    } else {
-                      setSelectedAgeRange(
-                        selectedAgeRange.filter((a) => a !== range.value)
-                      );
-                    }
+                    setSelectedAgeRange(e.target.value);
                   }}
-                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300"
                 />
                 <span className="text-gray-700 group-hover:text-pink-700 transition-colors">
                   {range.label}
                 </span>
               </label>
             ))}
-
-            {/* Program Age (sub-filter under Age Range) */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold text-gray-800">
-                  Program Age
-                </h4>
-                {selectedProgramAges.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProgramAges([])}
-                    className="text-xs font-medium text-gray-500 hover:text-gray-700 underline underline-offset-2"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-
-              {programAgesLoading && (
-                <p className="text-xs text-gray-500">Loading program ages…</p>
-              )}
-
-              <div className={`max-h-44 overflow-y-auto pr-2 space-y-2 ${""}`}>
-                {(programAgeOptions.length > 0
-                  ? programAgeOptions
-                  : [
-                      // fallback (in case API returns empty)
-                      "30m - 6 yrs",
-                      "Infant - 12 yrs",
-                      "44m - 13 yrs",
-                      "6 weeks - 12 yrs",
-                    ]
-                ).map((opt) => (
-                  <label
-                    key={opt}
-                    className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${"cursor-pointer group hover:bg-gray-50"}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedProgramAges.includes(opt)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedProgramAges([...selectedProgramAges, opt]);
-                        } else {
-                          setSelectedProgramAges(
-                            selectedProgramAges.filter((p) => p !== opt)
-                          );
-                        }
-                      }}
-                      className="h-4 w-4 text-gray-700 focus:ring-gray-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
-                      {opt}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -733,7 +658,7 @@ export default function FilterPanel({
         </button>
         {expandedSections.availability && (
           <div className="mt-4 space-y-3 pl-4">
-            {selectedAgeRange.length === 0 && (
+            {!selectedAgeRange && (
               <p className="text-xs text-gray-500">
                 Select an age range first to enable availability.
               </p>
@@ -746,7 +671,7 @@ export default function FilterPanel({
               <label
                 key={opt.value}
                 className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${
-                  selectedAgeRange.length === 0
+                  !selectedAgeRange
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer group hover:bg-indigo-50"
                 }`}
@@ -757,7 +682,7 @@ export default function FilterPanel({
                   value={opt.value}
                   checked={selectedAvailability.includes(opt.value)}
                   onChange={() => setSelectedAvailability([opt.value])}
-                  disabled={selectedAgeRange.length === 0}
+                  disabled={!selectedAgeRange}
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
                 />
                 <span className="text-gray-700 group-hover:text-indigo-700 transition-colors">
@@ -769,7 +694,7 @@ export default function FilterPanel({
               <button
                 type="button"
                 onClick={() => setSelectedAvailability([])}
-                disabled={selectedAgeRange.length === 0}
+                disabled={!selectedAgeRange}
                 className="text-sm font-medium text-gray-500 hover:text-gray-700 underline underline-offset-2"
               >
                 Clear availability

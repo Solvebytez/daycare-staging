@@ -58,8 +58,7 @@ function SearchPageContent() {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedAgeRange, setSelectedAgeRange] = useState<string[]>([]);
-  const [selectedProgramAges, setSelectedProgramAges] = useState<string[]>([]);
+  const [selectedAgeRange, setSelectedAgeRange] = useState<string>("");
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
     []
   );
@@ -120,8 +119,7 @@ function SearchPageContent() {
     selectedRegion: "",
     selectedPriceRange: "",
     selectedTypes: [] as string[],
-    selectedAgeRange: [] as string[],
-    selectedProgramAges: [] as string[],
+    selectedAgeRange: "",
     selectedAvailability: [] as string[],
     selectedWard: "",
     cwelccParticipating: false,
@@ -148,8 +146,7 @@ function SearchPageContent() {
     if (selectedRegion) currentParams.set("region", selectedRegion);
     if (selectedPriceRange) currentParams.set("priceRange", selectedPriceRange);
     if (selectedTypes.length > 0) currentParams.set("types", selectedTypes.join(","));
-    if (selectedAgeRange.length > 0) currentParams.set("ageRange", selectedAgeRange.join(","));
-    if (selectedProgramAges.length > 0) currentParams.set("programAges", selectedProgramAges.join(","));
+    if (selectedAgeRange) currentParams.set("ageRange", selectedAgeRange);
     if (selectedAvailability.length > 0) currentParams.set("availability", selectedAvailability.join(","));
     if (selectedWard) currentParams.set("ward", selectedWard);
     if (cwelccParticipating) currentParams.set("cwelcc", "true");
@@ -211,25 +208,25 @@ function SearchPageContent() {
       setSelectedTypes(typesArray);
     }
     
-    // Sync age range
+    // Sync age range - only if explicitly in URL, otherwise clear
     const ageRange = params.get("ageRange");
-    const ageRangeArray = ageRange ? ageRange.split(",").filter(Boolean) : [];
-    if (JSON.stringify(ageRangeArray) !== JSON.stringify(selectedAgeRange)) {
-      setSelectedAgeRange(ageRangeArray);
+    if (ageRange && ageRange !== selectedAgeRange) {
+      setSelectedAgeRange(ageRange);
+    } else if (!ageRange && selectedAgeRange) {
+      // Clear if URL doesn't have it but state does
+      setSelectedAgeRange("");
     }
     
-    // Sync program ages
-    const programAges = params.get("programAges");
-    const programAgesArray = programAges ? programAges.split(",").filter(Boolean) : [];
-    if (JSON.stringify(programAgesArray) !== JSON.stringify(selectedProgramAges)) {
-      setSelectedProgramAges(programAgesArray);
-    }
-    
-    // Sync availability
+    // Sync availability - only if age range is also present
     const availability = params.get("availability");
-    const availabilityArray = availability ? availability.split(",").filter(Boolean) : [];
-    if (JSON.stringify(availabilityArray) !== JSON.stringify(selectedAvailability)) {
-      setSelectedAvailability(availabilityArray);
+    if (availability && ageRange) {
+      const availabilityArray = availability.split(",").filter(Boolean);
+      if (JSON.stringify(availabilityArray) !== JSON.stringify(selectedAvailability)) {
+        setSelectedAvailability(availabilityArray);
+      }
+    } else if (!ageRange && selectedAvailability.length > 0) {
+      // Clear availability if no age range
+      setSelectedAvailability([]);
     }
     
     // Sync ward (decode URL-encoded values)
@@ -329,22 +326,22 @@ function SearchPageContent() {
       setSelectedTypes(types.split(",").filter(Boolean));
     }
     
-    // Read age range (comma-separated)
+    // Read age range - only set if explicitly in URL
     const ageRange = params.get("ageRange");
     if (ageRange) {
-      setSelectedAgeRange(ageRange.split(",").filter(Boolean));
+      setSelectedAgeRange(ageRange);
+    } else {
+      // Ensure no default selection
+      setSelectedAgeRange("");
     }
     
-    // Read program ages (comma-separated)
-    const programAges = params.get("programAges");
-    if (programAges) {
-      setSelectedProgramAges(programAges.split(",").filter(Boolean));
-    }
-    
-    // Read availability (comma-separated)
+    // Read availability (comma-separated) - only if age range is also selected
     const availability = params.get("availability");
-    if (availability) {
+    if (availability && ageRange) {
       setSelectedAvailability(availability.split(",").filter(Boolean));
+    } else {
+      // Clear availability if no age range
+      setSelectedAvailability([]);
     }
     
     // Read ward (decode URL-encoded values like + to spaces)
@@ -481,7 +478,6 @@ function SearchPageContent() {
       selectedPriceRange,
       selectedTypes,
       selectedAgeRange,
-      selectedProgramAges,
       selectedAvailability,
       selectedWard,
       cwelccParticipating,
@@ -496,8 +492,7 @@ function SearchPageContent() {
       prevFiltersRef.current.selectedRegion !== currentFilters.selectedRegion ||
       prevFiltersRef.current.selectedPriceRange !== currentFilters.selectedPriceRange ||
       JSON.stringify(prevFiltersRef.current.selectedTypes) !== JSON.stringify(currentFilters.selectedTypes) ||
-      JSON.stringify(prevFiltersRef.current.selectedAgeRange) !== JSON.stringify(currentFilters.selectedAgeRange) ||
-      JSON.stringify(prevFiltersRef.current.selectedProgramAges) !== JSON.stringify(currentFilters.selectedProgramAges) ||
+      prevFiltersRef.current.selectedAgeRange !== currentFilters.selectedAgeRange ||
       JSON.stringify(prevFiltersRef.current.selectedAvailability) !== JSON.stringify(currentFilters.selectedAvailability) ||
       prevFiltersRef.current.selectedWard !== currentFilters.selectedWard ||
       prevFiltersRef.current.cwelccParticipating !== currentFilters.cwelccParticipating ||
@@ -518,7 +513,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedProgramAges,
     selectedAvailability,
     selectedWard,
     cwelccParticipating,
@@ -555,13 +549,8 @@ function SearchPageContent() {
     }
     
     // Add age range
-    if (selectedAgeRange.length > 0) {
-      params.set("ageRange", selectedAgeRange.join(","));
-    }
-    
-    // Add program ages
-    if (selectedProgramAges.length > 0) {
-      params.set("programAges", selectedProgramAges.join(","));
+    if (selectedAgeRange) {
+      params.set("ageRange", selectedAgeRange);
     }
     
     // Add availability
@@ -637,7 +626,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedProgramAges,
     selectedAvailability,
     selectedWard,
     cwelccParticipating,
@@ -691,7 +679,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedProgramAges,
     selectedAvailability,
     selectedWard,
     cwelccParticipating,
@@ -701,19 +688,17 @@ function SearchPageContent() {
   ]);
 
   // Availability should be selectable only after Age Range is chosen.
-  // Default to "No" once Age Range is selected.
+  // Clear availability when age range changes or is cleared.
+  const prevAgeRangeRef = useRef<string>("");
   useEffect(() => {
-    if (selectedAgeRange.length === 0) {
-      // If user clears age range, also clear availability (and UI will disable it)
-      if (selectedAvailability.length > 0) setSelectedAvailability([]);
-      return;
+    // If age range changed (not just cleared), clear availability
+    if (prevAgeRangeRef.current !== selectedAgeRange) {
+      if (selectedAvailability.length > 0) {
+        setSelectedAvailability([]);
+      }
+      prevAgeRangeRef.current = selectedAgeRange;
     }
-
-    // Age Range chosen: default availability to "No" if not set yet
-    if (selectedAvailability.length === 0) {
-      setSelectedAvailability(["no"]);
-    }
-  }, [selectedAgeRange, selectedAvailability, selectedProgramAges]);
+  }, [selectedAgeRange, selectedAvailability]);
 
   const escapeRegex = useCallback((value: string) => {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -752,19 +737,14 @@ function SearchPageContent() {
       params.daycareType = selectedTypes.map(escapeRegex).join("|");
     }
 
-    // Age range (array to comma-separated string)
-    if (selectedAgeRange.length > 0) {
-      params.ageRange = selectedAgeRange.join(",");
-    }
-
-    // Program age (sub-filter under Age Range)
-    if (selectedProgramAges.length > 0) {
-      params.programAge = selectedProgramAges.join(",");
+    // Age range
+    if (selectedAgeRange) {
+      params.ageRange = selectedAgeRange;
     }
 
     // Availability (vacancy) cascade: only meaningful when ageRange is selected
     // and availability is "yes" or "no".
-    if (selectedAgeRange.length > 0 && selectedAvailability.length > 0) {
+    if (selectedAgeRange && selectedAvailability.length > 0) {
       params.vacancy = selectedAvailability[0];
     }
 
@@ -792,7 +772,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedProgramAges,
     selectedAvailability,
     selectedWard,
     cwelccParticipating,
@@ -833,17 +812,12 @@ function SearchPageContent() {
     }
 
     // Age range
-    if (selectedAgeRange.length > 0) {
-      params.ageRange = selectedAgeRange.join(",");
-    }
-
-    // Program age
-    if (selectedProgramAges.length > 0) {
-      params.programAge = selectedProgramAges.join(",");
+    if (selectedAgeRange) {
+      params.ageRange = selectedAgeRange;
     }
 
     // Availability
-    if (selectedAgeRange.length > 0 && selectedAvailability.length > 0) {
+    if (selectedAgeRange && selectedAvailability.length > 0) {
       params.vacancy = selectedAvailability[0];
     }
 
@@ -869,7 +843,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedProgramAges,
     selectedAvailability,
     selectedWard,
     cwelccParticipating,
@@ -916,27 +889,6 @@ function SearchPageContent() {
     ? citiesResponse.data
     : Array.isArray(citiesResponse)
     ? citiesResponse
-    : [];
-
-  // Program ages (distinct)
-  const { data: programAgesResponse, isLoading: programAgesLoading } = useQuery(
-    {
-      queryKey: ["daycares", "programAges"],
-      queryFn: async () => {
-        const response = await apiClient.get("/api/daycares/program-ages/all");
-        return response.data;
-      },
-      staleTime: 15 * 60 * 1000, // 15 minutes - program ages rarely change
-      gcTime: 30 * 60 * 1000, // 30 minutes - keep cached longer
-      refetchOnMount: false, // Don't refetch if we have cached data
-      refetchOnWindowFocus: false,
-    }
-  );
-
-  const programAgeOptions: string[] = Array.isArray(programAgesResponse?.data)
-    ? programAgesResponse.data
-    : Array.isArray(programAgesResponse)
-    ? programAgesResponse
     : [];
 
   // Daycare types by region and city (dynamic)
@@ -1531,10 +1483,6 @@ function SearchPageContent() {
                 setSelectedTypes={setSelectedTypes}
                 selectedAgeRange={selectedAgeRange}
                 setSelectedAgeRange={setSelectedAgeRange}
-                programAgeOptions={programAgeOptions}
-                programAgesLoading={programAgesLoading}
-                selectedProgramAges={selectedProgramAges}
-                setSelectedProgramAges={setSelectedProgramAges}
                 selectedAvailability={selectedAvailability}
                 setSelectedAvailability={setSelectedAvailability}
                 selectedWard={selectedWard}
