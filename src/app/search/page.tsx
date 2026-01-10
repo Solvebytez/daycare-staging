@@ -730,10 +730,10 @@ function SearchPageContent() {
       params.ageRange = selectedAgeRange;
     }
 
-    // Availability (vacancy) cascade: only meaningful when ageRange is selected
+    // Availability cascade: only meaningful when ageRange is selected
     // and availability is "yes" or "no".
     if (selectedAgeRange && selectedAvailability.length > 0) {
-      params.vacancy = selectedAvailability[0];
+      params.availability = selectedAvailability[0];
     }
 
     // Ward
@@ -806,7 +806,7 @@ function SearchPageContent() {
 
     // Availability
     if (selectedAgeRange && selectedAvailability.length > 0) {
-      params.vacancy = selectedAvailability[0];
+      params.availability = selectedAvailability[0];
     }
 
     // Ward
