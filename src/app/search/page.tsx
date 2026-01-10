@@ -843,6 +843,8 @@ function SearchPageContent() {
     queryKey: ["daycares", "regions"],
     queryFn: async () => {
       const response = await apiClient.get("/api/daycares/regions/all");
+      console.log("🔍 [SEARCH PAGE] API Response:", response);
+      console.log("🔍 [SEARCH PAGE] response.data:", response.data);
       return response.data;
     },
     staleTime: 15 * 60 * 1000, // 15 minutes - regions rarely change
@@ -851,11 +853,17 @@ function SearchPageContent() {
     refetchOnWindowFocus: false,
   });
 
+  console.log("🔍 [SEARCH PAGE] regionsResponse:", regionsResponse);
+  console.log("🔍 [SEARCH PAGE] regionsResponse?.data:", regionsResponse?.data);
+
   const regions: string[] = Array.isArray(regionsResponse?.data)
     ? regionsResponse.data
     : Array.isArray(regionsResponse)
     ? regionsResponse
     : [];
+  
+  console.log("🔍 [SEARCH PAGE] Final regions array:", regions);
+  console.log("🔍 [SEARCH PAGE] Regions count:", regions.length);
 
   // Cities by region (distinct)
   const { data: citiesResponse } = useQuery({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -18,7 +18,6 @@ import Link from "next/link";
 import Navigation from "../components/Navigation";
 import { apiClient } from "../lib/api";
 
-
 export default function HomePage() {
   const [location, setLocation] = useState("");
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -32,6 +31,8 @@ export default function HomePage() {
     queryKey: ["daycares", "regions"],
     queryFn: async () => {
       const response = await apiClient.get("/api/daycares/regions/all");
+      console.log("🏠 [HOME PAGE] API Response:", response);
+      console.log("🏠 [HOME PAGE] response.data:", response.data);
       return response.data;
     },
     staleTime: 15 * 60 * 1000, // 15 minutes - regions rarely change
@@ -40,15 +41,17 @@ export default function HomePage() {
     refetchOnWindowFocus: false,
   });
 
-  const regions: string[] = useMemo(() => {
-    if (Array.isArray(regionsResponse?.data)) {
-      return regionsResponse.data;
-    }
-    if (Array.isArray(regionsResponse)) {
-      return regionsResponse;
-    }
-    return [];
-  }, [regionsResponse]);
+  console.log("🏠 [HOME PAGE] regionsResponse:", regionsResponse);
+  console.log("🏠 [HOME PAGE] regionsResponse?.data:", regionsResponse?.data);
+
+  const regions: string[] = Array.isArray(regionsResponse?.data)
+    ? regionsResponse.data
+    : Array.isArray(regionsResponse)
+    ? regionsResponse
+    : [];
+
+  console.log("🏠 [HOME PAGE] Final regions array:", regions);
+  console.log("🏠 [HOME PAGE] Regions count:", regions.length);
 
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
@@ -122,7 +125,7 @@ export default function HomePage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <motion.h1
@@ -158,7 +161,10 @@ export default function HomePage() {
                 className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200"
               >
                 <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  <div ref={dropdownRef} className="relative flex-1 w-full sm:w-auto">
+                  <div
+                    ref={dropdownRef}
+                    className="relative flex-1 w-full sm:w-auto"
+                  >
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
                       <input
@@ -189,22 +195,30 @@ export default function HomePage() {
                     )}
                     {/* Region Dropdown */}
                     {showLocationDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
                         {regionsLoading ? (
                           <div className="px-4 py-2 text-gray-500 text-center">
                             Loading regions...
                           </div>
                         ) : regions.length > 0 ? (
-                          regions.map((region) => (
-                            <button
-                              key={region}
-                              type="button"
-                              onClick={() => selectRegion(region)}
-                              className="w-full px-4 py-2 text-left text-gray-800 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            >
-                              {region}
-                            </button>
-                          ))
+                          <div className="max-h-[320px] overflow-y-auto rounded-lg">
+                            {regions.map((region, index) => {
+                              console.log(
+                                `🏠 [HOME PAGE] Rendering region ${index + 1}:`,
+                                region
+                              );
+                              return (
+                                <button
+                                  key={region}
+                                  type="button"
+                                  onClick={() => selectRegion(region)}
+                                  className="w-full px-4 py-3 text-left text-gray-800 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                >
+                                  {region}
+                                </button>
+                              );
+                            })}
+                          </div>
                         ) : (
                           <div className="px-4 py-2 text-gray-500 text-center">
                             No regions available
@@ -238,7 +252,6 @@ export default function HomePage() {
       {/* 2. HOOKY HEADER: Added FOMO and 100 users badge */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
           <div className="text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 text-white text-sm font-bold mb-6 backdrop-blur-sm border border-white/30 animate-pulse">
               🔥 EXCLUSIVE: FREE FOR FIRST 100 PARENTS
@@ -247,24 +260,39 @@ export default function HomePage() {
               Stop Stressing Over Waitlists
             </h2>
             <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed font-medium">
-              Don&apos;t miss your spot. We automate the entire application process so you can secure your child&apos;s future while other parents are still filling out forms.
+              Don&apos;t miss your spot. We automate the entire application
+              process so you can secure your child&apos;s future while other
+              parents are still filling out forms.
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-            
             {/* 3. BLACK BLOCKS: Left Side Features - High Visibility Black Cards */}
             <div className="lg:col-span-2 space-y-6">
-              
               {/* Bulk App Submission */}
               <div className="flex gap-6 p-8 bg-gray-900/90 backdrop-blur-xl rounded-3xl border border-gray-800 items-start hover:bg-black transition-all shadow-2xl group">
                 <div className="flex-shrink-0 w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    />
+                  </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-xl">Bulk Application Submission</h3>
+                  <h3 className="font-bold text-white text-xl">
+                    Bulk Application Submission
+                  </h3>
                   <p className="text-gray-400 mt-2 leading-relaxed">
-                    Why apply one by one? Submit waitlist inquiries to up to 30 top-rated daycares in a single click. We handle the grind.
+                    Why apply one by one? Submit waitlist inquiries to up to 30
+                    top-rated daycares in a single click. We handle the grind.
                   </p>
                   <div className="mt-4 flex items-center gap-2 text-orange-400 font-bold text-sm">
                     <CheckCircle className="w-5 h-5" />
@@ -276,12 +304,28 @@ export default function HomePage() {
               {/* Follow-Up Reminders */}
               <div className="flex gap-6 p-8 bg-gray-900/90 backdrop-blur-xl rounded-3xl border border-gray-800 items-start hover:bg-black transition-all shadow-2xl group">
                 <div className="flex-shrink-0 w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                    />
+                  </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-xl">Automatic Follow-Up Reminders</h3>
+                  <h3 className="font-bold text-white text-xl">
+                    Automatic Follow-Up Reminders
+                  </h3>
                   <p className="text-gray-400 mt-2 leading-relaxed">
-                    Stay at the top of the pile. Our system sends polite follow-ups to daycare directors so your name is never forgotten.
+                    Stay at the top of the pile. Our system sends polite
+                    follow-ups to daycare directors so your name is never
+                    forgotten.
                   </p>
                   <div className="mt-4 flex items-center gap-2 text-blue-400 font-bold text-sm">
                     <CheckCircle className="w-5 h-5" />
@@ -293,12 +337,28 @@ export default function HomePage() {
               {/* Compare Daycares */}
               <div className="flex gap-6 p-8 bg-gray-900/90 backdrop-blur-xl rounded-3xl border border-gray-800 items-start hover:bg-black transition-all shadow-2xl group">
                 <div className="flex-shrink-0 w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-xl">Smart Side-by-Side Comparison</h3>
+                  <h3 className="font-bold text-white text-xl">
+                    Smart Side-by-Side Comparison
+                  </h3>
                   <p className="text-gray-400 mt-2 leading-relaxed">
-                    Don&apos;t settle. Compare costs, safety ratings, and availability instantly. Make the right choice for your child with zero guesswork.
+                    Don&apos;t settle. Compare costs, safety ratings, and
+                    availability instantly. Make the right choice for your child
+                    with zero guesswork.
                   </p>
                   <div className="mt-4 flex items-center gap-2 text-yellow-400 font-bold text-sm">
                     <CheckCircle className="w-5 h-5" />
@@ -316,12 +376,16 @@ export default function HomePage() {
               </div>
 
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-black text-gray-900 mb-2">Auto Apply Feature</h3>
+                <h3 className="text-2xl font-black text-gray-900 mb-2">
+                  Auto Apply Feature
+                </h3>
                 <p className="text-green-600 font-bold flex items-center justify-center gap-2 text-sm">
                   <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
                   Claim Your Free Access after our Beta Launch!
                 </p>
-                <p className="text-[10px] text-gray-400 mt-4 uppercase font-bold tracking-widest">Limited time • Full access</p>
+                <p className="text-[10px] text-gray-400 mt-4 uppercase font-bold tracking-widest">
+                  Limited time • Full access
+                </p>
               </div>
 
               {/* Feature List */}
@@ -331,11 +395,26 @@ export default function HomePage() {
                   "Automated follow-up reminders",
                   "Compare daycares side-by-side",
                   "Smart follow-up scheduling",
-                  "Application tracking dashboard"
+                  "Application tracking dashboard",
                 ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-gray-700 font-semibold text-sm">
+                  <li
+                    key={i}
+                    className="flex items-start gap-3 text-gray-700 font-semibold text-sm"
+                  >
                     <div className="mt-1 bg-green-100 rounded-full p-0.5">
-                      <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                      <svg
+                        className="w-3.5 h-3.5 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="3"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
                     </div>
                     {item}
                   </li>
@@ -353,7 +432,6 @@ export default function HomePage() {
                 🚀 No payment required
               </p>
             </div>
-
           </div>
         </div>
       </section>
@@ -404,7 +482,10 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} KinderBridge. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} KinderBridge. All rights
+              reserved.
+            </p>
             <div className="mt-2 flex justify-center items-center space-x-2">
               <span className="text-xs text-gray-500">
                 Developed by ASH Web Solutions
@@ -438,19 +519,66 @@ export default function HomePage() {
           <div className="bg-blue-900/20 rounded-2xl p-6 border border-blue-800/40">
             <div className="flex gap-4 items-start">
               <div className="flex-shrink-0 mt-1">
-                <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  className="w-6 h-6 text-orange-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
               <div className="text-xs sm:text-sm text-gray-400 leading-relaxed space-y-4">
                 <p>
-                  <span className="font-bold text-gray-300">Disclaimer:</span> Every effort is made to ensure that the information on <span className="text-blue-400 font-medium">KinderBridge</span> is accurate, up-to-date, and comprehensive. However, <span className="font-bold text-gray-300">KinderBridge cannot assume liability resulting from errors or omissions.</span> Inclusion or omission of a program or service is not a comment on its quality.
+                  <span className="font-bold text-gray-300">Disclaimer:</span>{" "}
+                  Every effort is made to ensure that the information on{" "}
+                  <span className="text-blue-400 font-medium">
+                    KinderBridge
+                  </span>{" "}
+                  is accurate, up-to-date, and comprehensive. However,{" "}
+                  <span className="font-bold text-gray-300">
+                    KinderBridge cannot assume liability resulting from errors
+                    or omissions.
+                  </span>{" "}
+                  Inclusion or omission of a program or service is not a comment
+                  on its quality.
                 </p>
                 <p>
-                  Records in this database are compiled from publicly available sources including government open data portals, Google Maps, and individual daycare websites. KinderBridge cannot be held responsible for the accuracy of information provided by these external sources. <span className="font-bold text-gray-300">Users are urged to confirm all information independently</span> with daycare providers.
+                  Records in this database are compiled from publicly available
+                  sources including government open data portals, Google Maps,
+                  and individual daycare websites. KinderBridge cannot be held
+                  responsible for the accuracy of information provided by these
+                  external sources.{" "}
+                  <span className="font-bold text-gray-300">
+                    Users are urged to confirm all information independently
+                  </span>{" "}
+                  with daycare providers.
                 </p>
                 <p>
-                  KinderBridge is <span className="font-bold text-gray-300">not affiliated with, endorsed by, or partnered with</span> any daycare centers, childcare providers, or government agencies. Waitlist positions and availability estimates may not reflect real-time status. If you have questions, please see our <Link href="/terms" className="text-blue-400 hover:underline">Terms of Use</Link> or <Link href="/contact" className="text-blue-400 hover:underline">contact us</Link>.
+                  KinderBridge is{" "}
+                  <span className="font-bold text-gray-300">
+                    not affiliated with, endorsed by, or partnered with
+                  </span>{" "}
+                  any daycare centers, childcare providers, or government
+                  agencies. Waitlist positions and availability estimates may
+                  not reflect real-time status. If you have questions, please
+                  see our{" "}
+                  <Link href="/terms" className="text-blue-400 hover:underline">
+                    Terms of Use
+                  </Link>{" "}
+                  or{" "}
+                  <Link
+                    href="/contact"
+                    className="text-blue-400 hover:underline"
+                  >
+                    contact us
+                  </Link>
+                  .
                 </p>
               </div>
             </div>
