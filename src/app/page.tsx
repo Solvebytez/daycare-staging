@@ -151,7 +151,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="max-w-4xl mx-auto"
+              className="max-w-4xl mx-auto mb-16"
             >
               <form
                 onSubmit={handleSearch}
@@ -224,39 +224,6 @@ export default function HomePage() {
                   </div>
                 </div>
               </form>
-            </motion.div>
-
-            {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center mt-8"
-            >
-              <Link
-                href="/register"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-lg font-medium transition-all transform hover:scale-105"
-              >
-                Start Your Search
-              </Link>
-            </motion.div>
-
-            {/* Quick Contact */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.0 }}
-              className="mt-8 text-center"
-            >
-              <div className="flex flex-col items-center">
-                <div className="flex items-center space-x-2 text-gray-700 mb-2">
-                  <Mail className="h-4 w-4" />
-                  <span>Info@kinderbridge.com</span>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  We typically respond within 24 hours
-                </p>
-              </div>
             </motion.div>
           </div>
         </div>

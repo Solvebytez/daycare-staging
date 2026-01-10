@@ -208,25 +208,17 @@ function SearchPageContent() {
       setSelectedTypes(typesArray);
     }
     
-    // Sync age range - only if explicitly in URL, otherwise clear
-    const ageRange = params.get("ageRange");
-    if (ageRange && ageRange !== selectedAgeRange) {
+    // Sync age range
+    const ageRange = params.get("ageRange") || "";
+    if (ageRange !== selectedAgeRange) {
       setSelectedAgeRange(ageRange);
-    } else if (!ageRange && selectedAgeRange) {
-      // Clear if URL doesn't have it but state does
-      setSelectedAgeRange("");
     }
     
-    // Sync availability - only if age range is also present
+    // Sync availability
     const availability = params.get("availability");
-    if (availability && ageRange) {
-      const availabilityArray = availability.split(",").filter(Boolean);
-      if (JSON.stringify(availabilityArray) !== JSON.stringify(selectedAvailability)) {
-        setSelectedAvailability(availabilityArray);
-      }
-    } else if (!ageRange && selectedAvailability.length > 0) {
-      // Clear availability if no age range
-      setSelectedAvailability([]);
+    const availabilityArray = availability ? availability.split(",").filter(Boolean) : [];
+    if (JSON.stringify(availabilityArray) !== JSON.stringify(selectedAvailability)) {
+      setSelectedAvailability(availabilityArray);
     }
     
     // Sync ward (decode URL-encoded values)
@@ -326,22 +318,16 @@ function SearchPageContent() {
       setSelectedTypes(types.split(",").filter(Boolean));
     }
     
-    // Read age range - only set if explicitly in URL
-    const ageRange = params.get("ageRange");
+    // Read age range
+    const ageRange = params.get("ageRange") || "";
     if (ageRange) {
       setSelectedAgeRange(ageRange);
-    } else {
-      // Ensure no default selection
-      setSelectedAgeRange("");
     }
     
-    // Read availability (comma-separated) - only if age range is also selected
+    // Read availability (comma-separated)
     const availability = params.get("availability");
-    if (availability && ageRange) {
+    if (availability) {
       setSelectedAvailability(availability.split(",").filter(Boolean));
-    } else {
-      // Clear availability if no age range
-      setSelectedAvailability([]);
     }
     
     // Read ward (decode URL-encoded values like + to spaces)
@@ -688,15 +674,17 @@ function SearchPageContent() {
   ]);
 
   // Availability should be selectable only after Age Range is chosen.
-  // Clear availability when age range changes or is cleared.
-  const prevAgeRangeRef = useRef<string>("");
+  // Default to "No" once Age Range is selected.
   useEffect(() => {
-    // If age range changed (not just cleared), clear availability
-    if (prevAgeRangeRef.current !== selectedAgeRange) {
-      if (selectedAvailability.length > 0) {
-        setSelectedAvailability([]);
-      }
-      prevAgeRangeRef.current = selectedAgeRange;
+    if (!selectedAgeRange) {
+      // If user clears age range, also clear availability (and UI will disable it)
+      if (selectedAvailability.length > 0) setSelectedAvailability([]);
+      return;
+    }
+
+    // Age Range chosen: default availability to "No" if not set yet
+    if (selectedAvailability.length === 0) {
+      setSelectedAvailability(["no"]);
     }
   }, [selectedAgeRange, selectedAvailability]);
 
