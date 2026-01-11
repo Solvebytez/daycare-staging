@@ -125,7 +125,7 @@ export default function HomePage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative">
+      <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <motion.h1
@@ -197,11 +197,11 @@ export default function HomePage() {
                     {showLocationDropdown && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
                         {regionsLoading ? (
-                          <div className="px-4 py-2 text-gray-500 text-center">
+                          <div className="px-4 py-2 text-gray-500 text-center rounded-lg">
                             Loading regions...
                           </div>
                         ) : regions.length > 0 ? (
-                          <div className="max-h-[320px] overflow-y-auto rounded-lg">
+                          <div className="rounded-lg overflow-hidden max-h-[280px] overflow-y-auto">
                             {regions.map((region, index) => {
                               console.log(
                                 `🏠 [HOME PAGE] Rendering region ${index + 1}:`,
@@ -220,7 +220,7 @@ export default function HomePage() {
                             })}
                           </div>
                         ) : (
-                          <div className="px-4 py-2 text-gray-500 text-center">
+                          <div className="px-4 py-2 text-gray-500 text-center rounded-lg">
                             No regions available
                           </div>
                         )}

@@ -34,9 +34,9 @@ function VerifyEmailForm() {
       setIsVerifying(false);
       // If email is provided but no token, show resend option
       if (emailParam) {
-        setError("Please check your email for the verification link, or resend it below.");
+        setError("Please check your inbox and spam folder for the verification link, or resend it below.");
       } else {
-        setError("Invalid verification link. Please check your email.");
+        setError("Invalid verification link. Please check your inbox and spam folder.");
       }
     }
   }, [searchParams]);
@@ -204,6 +204,9 @@ function VerifyEmailForm() {
                 <p>
                   Enter your email address below and we'll send you a new
                   verification link.
+                </p>
+                <p className="mt-2">
+                  <strong>Tip:</strong> Don't forget to check your <strong>spam folder</strong> if you don't see the email in your inbox.
                 </p>
               </div>
               <div className="mt-4">

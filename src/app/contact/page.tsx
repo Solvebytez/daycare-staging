@@ -1,35 +1,31 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import { Mail, Phone, Clock, Send, ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-import Navigation from "@/components/Navigation";
+import { motion } from 'framer-motion';
+import { Mail, Phone, MapPin, Clock, Send, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import Navigation from '@/components/Navigation';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission here
-    console.log("Form submitted:", formData);
-    alert("Thank you for your message! We'll get back to you soon.");
+    console.log('Form submitted:', formData);
+    alert('Thank you for your message! We\'ll get back to you soon.');
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     });
   };
 
@@ -68,13 +64,10 @@ export default function ContactPage() {
             className="text-center mb-12"
           >
             <div className="mb-4">
-              <h1 className="text-4xl sm:text-5xl font-bold text-blue-700 mb-4">
-                Get In Touch
-              </h1>
+              <h1 className="text-4xl sm:text-5xl font-bold text-blue-700 mb-4">Get In Touch</h1>
             </div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
-              Have questions about our services? Need help finding the right
-              Daycare location? We&apos;re here to help!
+              Have questions about our services? Need help finding the right daycare? We&apos;re here to help!
             </p>
           </motion.div>
         </div>
@@ -91,16 +84,11 @@ export default function ContactPage() {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Send us a Message
-              </h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Send us a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                       Full Name *
                     </label>
                     <input
@@ -115,10 +103,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address *
                     </label>
                     <input
@@ -133,13 +118,10 @@ export default function ContactPage() {
                     />
                   </div>
                 </div>
-
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                       Phone Number
                     </label>
                     <input
@@ -153,10 +135,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="subject"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
                       Subject *
                     </label>
                     <select
@@ -169,9 +148,7 @@ export default function ContactPage() {
                     >
                       <option value="">Select a subject</option>
                       <option value="general">General Inquiry</option>
-                      <option value="daycare-search">
-                        Help Finding Daycare
-                      </option>
+                      <option value="daycare-search">Help Finding Daycare</option>
                       <option value="provider-support">Provider Support</option>
                       <option value="technical">Technical Support</option>
                       <option value="feedback">Feedback</option>
@@ -181,10 +158,7 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="message"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                     Message *
                   </label>
                   <textarea
@@ -216,9 +190,7 @@ export default function ContactPage() {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Contact Information
-              </h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Contact Information</h2>
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
@@ -227,53 +199,74 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                      Email Us
-                    </h3>
-                    <p className="text-gray-600 mb-2">Info@kinderbridge.com</p>
-                    <p className="text-sm text-gray-500">
-                      We typically respond within 24 hours
-                    </p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Email Us</h3>
+                    <p className="text-gray-600 mb-2">hello@daycareconcierge.com</p>
+                    <p className="text-sm text-gray-500">We typically respond within 24 hours</p>
                   </div>
                 </div>
 
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <Phone className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Call Us</h3>
+                    <p className="text-gray-600 mb-2">(555) 123-4567</p>
+                    <p className="text-sm text-gray-500">Monday - Friday, 9 AM - 6 PM EST</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-purple-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Visit Us</h3>
+                    <p className="text-gray-600 mb-2">123 Business Ave, Suite 100<br />Toronto, ON M5V 2H1</p>
+                    <p className="text-sm text-gray-500">By appointment only</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-orange-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Business Hours</h3>
+                    <p className="text-gray-600 mb-2">
+                      Monday - Friday: 9:00 AM - 6:00 PM EST<br />
+                      Saturday: 10:00 AM - 2:00 PM EST<br />
+                      Sunday: Closed
+                    </p>
+                    <p className="text-sm text-gray-500">Emergency support available 24/7</p>
+                  </div>
+                </div>
               </div>
 
               {/* FAQ Section */}
-              {/* <div className="mt-12 p-6 bg-gray-50 rounded-xl">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  Frequently Asked Questions
-                </h3>
+              <div className="mt-12 p-6 bg-gray-50 rounded-xl">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Frequently Asked Questions</h3>
                 <div className="space-y-3">
                   <div className="border-l-4 border-blue-500 pl-4">
-                    <h4 className="font-medium text-gray-900">
-                      How quickly do you respond to inquiries?
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      We aim to respond to all inquiries within 24 hours during
-                      business days.
-                    </p>
+                    <h4 className="font-medium text-gray-900">How quickly do you respond to inquiries?</h4>
+                    <p className="text-sm text-gray-600">We aim to respond to all inquiries within 24 hours during business days.</p>
                   </div>
                   <div className="border-l-4 border-green-500 pl-4">
-                    <h4 className="font-medium text-gray-900">
-                      Can you help me find a KinderBridge location in my area?
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      Absolutely! Our team specializes in helping families find
-                      the perfect KinderBridge match.
-                    </p>
+                    <h4 className="font-medium text-gray-900">Can you help me find a daycare in my area?</h4>
+                    <p className="text-sm text-gray-600">Absolutely! Our team specializes in helping families find the perfect daycare match.</p>
                   </div>
                   <div className="border-l-4 border-purple-500 pl-4">
-                    <h4 className="font-medium text-gray-900">
-                      Do you offer support for KinderBridge providers?
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      Yes, we provide comprehensive support for KinderBridge
-                      locations looking to join our platform.
-                    </p>
+                    <h4 className="font-medium text-gray-900">Do you offer support for daycare providers?</h4>
+                    <p className="text-sm text-gray-600">Yes, we provide comprehensive support for daycare centers looking to join our platform.</p>
                   </div>
                 </div>
-              </div> */}
+              </div>
             </motion.div>
           </div>
         </div>
@@ -282,54 +275,24 @@ export default function ContactPage() {
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Ready to Start your Search?
-            </h2>
+            <h2 className="text-4xl font-bold text-white mb-4">Need Immediate Assistance?</h2>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Browse daycares, read authentic reviews, and make informed decisions for your child's early education journey.
+              For urgent matters, call us directly or use our live chat feature during business hours.
             </p>
-            {/* --- INSERT START (Around Line 465) --- */}
-            <div className="max-w-md mx-auto mb-10 p-6 bg-white rounded-3xl border-4 border-yellow-400 shadow-xl relative text-left">
-              <div className="absolute -top-4 -right-2 bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black shadow-lg uppercase">
-                ONLY 100 SPOTS
-              </div>
-              <div className="text-center mb-4">
-                <h4 className="text-xl font-black text-gray-900">Auto Apply Feature</h4>
-                <p className="text-green-600 font-bold flex items-center justify-center gap-2 text-xs">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  Claim Your Free Access after our Beta Launch!
-                </p>
-              </div>
-              <ul className="space-y-2 mb-6">
-                {[
-                  "Submit applications to 30 daycares at once",
-                  "Automated follow-up reminders",
-                  "Compare daycares side-by-side",
-                  "Smart follow-up scheduling",
-                  "Application tracking dashboard"
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-gray-700 font-semibold text-xs">
-                    <div className="mt-0.5 bg-green-100 rounded-full p-0.5">
-                      <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/register" className="block w-full py-3 rounded-xl text-white text-center font-black bg-gradient-to-r from-blue-600 to-purple-600 shadow-md text-sm">
-                CLAIM MY FREE SPOT
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="tel:+15551234567" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-medium transition-colors">
+                Call Now: (555) 123-4567
+              </a>
+              <Link href="/search" className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 rounded-lg font-medium transition-colors">
+                Browse Daycares
               </Link>
-              <p className="text-center text-[10px] text-gray-400 mt-3 font-bold uppercase tracking-tight">
-                🚀 NO PAYMENT REQUIRED
-              </p>
             </div>
-            {/* --- INSERT END --- */}
           </motion.div>
         </div>
       </section>
@@ -337,76 +300,45 @@ export default function ContactPage() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">KinderBridge</h3>
+              <h3 className="text-xl font-bold mb-4">DayCare Concierge</h3>
               <p className="text-gray-400">
-                Connecting parents with trusted Daycares for a brighter future.
+                Connecting parents with trusted daycare providers for a brighter future.
               </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">For Parents</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link
-                    href="/search"
-                    className="hover:text-white transition-colors"
-                  >
-                    Find Daycare
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/parent/dashboard?tab=favorites"
-                    className="hover:text-white transition-colors"
-                  >
-                    My Favorites
-                  </Link>
-                </li>
+                <li><Link href="/search" className="hover:text-white transition-colors">Find Daycare</Link></li>
+                <li><Link href="/favorites" className="hover:text-white transition-colors">My Favorites</Link></li>
+                <li><Link href="/purchase-report" className="hover:text-white transition-colors">Get Report</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Contact Information</h4>
-              <div className="space-y-2 text-gray-400">
-                <p className="font-medium text-gray-300 mb-2">Email Us</p>
-                <div className="flex items-center mb-2">
+              <h4 className="font-semibold mb-4">For Providers</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link href="/register" className="hover:text-white transition-colors">List Your Center</Link></li>
+                <li><Link href="/provider/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors">Support</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Contact</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li className="flex items-center">
                   <Mail className="h-4 w-4 mr-2" />
-                  <span>Info@kinderbridge.com</span>
-                </div>
-                <p className="text-sm text-gray-500">
-                  We typically respond within 24 hours
-                </p>
-              </div>
+                  hello@daycareconcierge.com
+                </li>
+                <li className="flex items-center">
+                  <Phone className="h-4 w-4 mr-2" />
+                  (555) 123-4567
+                </li>
+              </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} KinderBridge. All rights reserved.</p>
-            <div className="mt-2 flex justify-center items-center space-x-2">
-              <span className="text-xs text-gray-500">
-                Developed by ASH Web Solutions
-              </span>
-              <a
-                href="https://ashwebsolutions.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-800"
-                title="Visit ASH WEB Solutions"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-            </div>
+            <p>&copy; 2024 DayCare Concierge. All rights reserved.</p>
           </div>
         </div>
       </footer>

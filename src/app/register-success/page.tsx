@@ -64,7 +64,7 @@ function RegisterSuccessContent() {
                     )}.
                   </p>
                   <p>
-                    Please check your inbox and click the verification link to activate your account.
+                    Please check your <strong>inbox and spam folder</strong> and click the verification link to activate your account.
                   </p>
                   <p className="text-blue-600 font-medium mt-3">
                     You must verify your email before you can log in.

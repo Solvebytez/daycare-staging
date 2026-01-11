@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
                 <div className="mt-2 text-sm text-green-700">
                   <p>
                     If an account exists with that email, a password reset link
-                    has been sent. Please check your inbox and follow the
+                    has been sent. Please check your <strong>inbox and spam folder</strong> and follow the
                     instructions.
                   </p>
                 </div>

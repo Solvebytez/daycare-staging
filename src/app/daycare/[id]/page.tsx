@@ -46,7 +46,6 @@ interface Daycare {
   features: string[];
   ageGroups: string[];
   rating: number;
-  reviewCount?: number;
   price: string | number;
   priceString?: string;
   distance: number;
@@ -112,7 +111,6 @@ export default function DaycareDetailPage({
                 ? Object.keys(apiDaycare.ageGroups)
                 : [],
               rating: apiDaycare.rating || 0,
-              reviewCount: apiDaycare.reviewCount || 0,
               price: apiDaycare.price || 0,
               priceString: apiDaycare.priceString,
               distance: apiDaycare.distance || 0,
@@ -322,7 +320,7 @@ export default function DaycareDetailPage({
                   </div>
                   <div className="flex items-center space-x-1">
                     <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span>{daycare.rating} Google reviews - {daycare.reviewCount || 0} Total reviews</span>
+                    <span>{daycare.rating} (Verified)</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Users className="h-4 w-4" />
