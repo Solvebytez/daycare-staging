@@ -36,6 +36,10 @@ interface FilterPanelProps {
   setSelectedAvailability: (
     value: string[] | ((prev: string[]) => string[])
   ) => void;
+  selectedVacancy: string[];
+  setSelectedVacancy: (
+    value: string[] | ((prev: string[]) => string[])
+  ) => void;
   selectedWard: string;
   setSelectedWard: (value: string) => void;
   cwelccParticipating: boolean;
@@ -52,6 +56,7 @@ interface FilterPanelProps {
     type: boolean;
     ageRange: boolean;
     availability: boolean;
+    vacancy: boolean;
   };
   setExpandedSections: (
     value:
@@ -61,6 +66,7 @@ interface FilterPanelProps {
           type: boolean;
           ageRange: boolean;
           availability: boolean;
+          vacancy: boolean;
         }
       | ((prev: {
           sort: boolean;
@@ -68,12 +74,14 @@ interface FilterPanelProps {
           type: boolean;
           ageRange: boolean;
           availability: boolean;
+          vacancy: boolean;
         }) => {
           sort: boolean;
           price: boolean;
           type: boolean;
           ageRange: boolean;
           availability: boolean;
+          vacancy: boolean;
         })
   ) => void;
   displayedDaycaresLength: number;
@@ -95,6 +103,8 @@ export default function FilterPanel({
   setSelectedAgeRange,
   selectedAvailability,
   setSelectedAvailability,
+  selectedVacancy,
+  setSelectedVacancy,
   selectedWard,
   setSelectedWard,
   cwelccParticipating,
@@ -500,7 +510,7 @@ export default function FilterPanel({
                 Select an age range first to enable availability.
               </p>
             )}
-            {/* Yes/No radios map to vacancy filter (cascade with Age Range) */}
+            {/* Yes/No radios filter by ageGroups.{group}.capacity (cascade with Age Range) */}
             {[
               { label: "Yes", value: "yes" },
               { label: "No", value: "no" },
@@ -535,6 +545,70 @@ export default function FilterPanel({
                 className="text-sm font-medium text-gray-500 hover:text-gray-700 underline underline-offset-2"
               >
                 Clear availability
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Vacancy */}
+      <div className="mb-6">
+        <button
+          onClick={() => toggleSection("vacancy")}
+          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+            Vacancy
+          </h3>
+          {expandedSections.vacancy ? (
+            <ChevronUp className="h-5 w-5 text-gray-500 group-hover:text-green-600 transition-colors" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-green-600 transition-colors" />
+          )}
+        </button>
+        {expandedSections.vacancy && (
+          <div className="mt-4 space-y-3 pl-4">
+            {!selectedAgeRange && (
+              <p className="text-xs text-gray-500">
+                Select an age range first to enable vacancy.
+              </p>
+            )}
+            {/* Yes/No radios filter by ageGroups.{group}.vacancy (cascade with Age Range) */}
+            {[
+              { label: "Yes", value: "yes" },
+              { label: "No", value: "no" },
+            ].map((opt) => (
+              <label
+                key={opt.value}
+                className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${
+                  !selectedAgeRange
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer group hover:bg-green-50"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="vacancyStatus"
+                  value={opt.value}
+                  checked={selectedVacancy.includes(opt.value)}
+                  onChange={() => setSelectedVacancy([opt.value])}
+                  disabled={!selectedAgeRange}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                />
+                <span className="text-gray-700 group-hover:text-green-700 transition-colors">
+                  {opt.label}
+                </span>
+              </label>
+            ))}
+            {selectedVacancy.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedVacancy([])}
+                disabled={!selectedAgeRange}
+                className="text-sm font-medium text-gray-500 hover:text-gray-700 underline underline-offset-2"
+              >
+                Clear vacancy
               </button>
             )}
           </div>
