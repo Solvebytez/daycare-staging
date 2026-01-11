@@ -249,6 +249,7 @@ export default function FilterPanel({
     setSelectedTypes([]);
     setSelectedAgeRange("");
     setSelectedAvailability([]);
+    setSelectedVacancy([]);
     setSelectedWard("");
     setCwelccParticipating(false);
     setAcceptsSubsidy(false);
@@ -259,6 +260,7 @@ export default function FilterPanel({
     setSelectedTypes,
     setSelectedAgeRange,
     setSelectedAvailability,
+    setSelectedVacancy,
     setSelectedWard,
     setCwelccParticipating,
     setAcceptsSubsidy,
@@ -310,6 +312,7 @@ export default function FilterPanel({
                 type: false,
                 ageRange: false,
                 availability: false,
+                vacancy: false,
               })
             }
             className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
@@ -324,6 +327,7 @@ export default function FilterPanel({
                 type: true,
                 ageRange: true,
                 availability: true,
+                vacancy: true,
               })
             }
             className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
