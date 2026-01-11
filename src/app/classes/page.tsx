@@ -1039,20 +1039,12 @@ export default function ClassesPage() {
                 </p>
               </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Business Hours</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>Monday - Friday: 9:00 AM - 6:00 PM EST</li>
-                <li>Saturday: 10:00 AM - 2:00 PM EST</li>
-                <li>Sunday: Closed</li>
-                <li className="text-sm text-gray-500 mt-3">
-                  Emergency support available 24/7
-                </li>
-              </ul>
-            </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} KinderBridge. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} KinderBridge. All rights
+              reserved.
+            </p>
             <div className="mt-2 flex justify-center items-center space-x-2">
               <span className="text-xs text-gray-500">
                 Developed by ASH Web Solutions
@@ -1078,6 +1070,76 @@ export default function ClassesPage() {
                   />
                 </svg>
               </a>
+            </div>
+          </div>
+        </div>
+        {/* Updated KinderBridge Disclaimer - Added by Abhishek */}
+        <div className="mt-12 pt-8 border-t border-gray-800">
+          <div className="bg-blue-900/20 rounded-2xl p-6 border border-blue-800/40">
+            <div className="flex gap-4 items-start">
+              <div className="flex-shrink-0 mt-1">
+                <svg
+                  className="w-6 h-6 text-orange-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400 leading-relaxed space-y-4">
+                <p>
+                  <span className="font-bold text-gray-300">Disclaimer:</span>{" "}
+                  Every effort is made to ensure that the information on{" "}
+                  <span className="text-blue-400 font-medium">
+                    KinderBridge
+                  </span>{" "}
+                  is accurate, up-to-date, and comprehensive. However,{" "}
+                  <span className="font-bold text-gray-300">
+                    KinderBridge cannot assume liability resulting from errors
+                    or omissions.
+                  </span>{" "}
+                  Inclusion or omission of a program or service is not a comment
+                  on its quality.
+                </p>
+                <p>
+                  Records in this database are compiled from publicly available
+                  sources including government open data portals, Google Maps,
+                  and individual daycare websites. KinderBridge cannot be held
+                  responsible for the accuracy of information provided by these
+                  external sources.{" "}
+                  <span className="font-bold text-gray-300">
+                    Users are urged to confirm all information independently
+                  </span>{" "}
+                  with daycare providers.
+                </p>
+                <p>
+                  KinderBridge is{" "}
+                  <span className="font-bold text-gray-300">
+                    not affiliated with, endorsed by, or partnered with
+                  </span>{" "}
+                  any daycare centers, childcare providers, or government
+                  agencies. Waitlist positions and availability estimates may
+                  not reflect real-time status. If you have questions, please
+                  see our{" "}
+                  <Link href="/terms" className="text-blue-400 hover:underline">
+                    Terms of Use
+                  </Link>{" "}
+                  or{" "}
+                  <Link
+                    href="/contact"
+                    className="text-blue-400 hover:underline"
+                  >
+                    contact us
+                  </Link>
+                  .
+                </p>
+              </div>
             </div>
           </div>
         </div>

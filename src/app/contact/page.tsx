@@ -300,45 +300,149 @@ export default function ContactPage() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">DayCare Concierge</h3>
+              <h3 className="text-xl font-bold mb-4">KinderBridge</h3>
               <p className="text-gray-400">
-                Connecting parents with trusted daycare providers for a brighter future.
+                Connecting parents with trusted Daycares for a brighter future.
               </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">For Parents</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/search" className="hover:text-white transition-colors">Find Daycare</Link></li>
-                <li><Link href="/favorites" className="hover:text-white transition-colors">My Favorites</Link></li>
-                <li><Link href="/purchase-report" className="hover:text-white transition-colors">Get Report</Link></li>
+                <li>
+                  <Link
+                    href="/search"
+                    className="hover:text-white transition-colors"
+                  >
+                    Find Daycare
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/parent/dashboard?tab=favorites"
+                    className="hover:text-white transition-colors"
+                  >
+                    My Favorites
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">For Providers</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="/register" className="hover:text-white transition-colors">List Your Center</Link></li>
-                <li><Link href="/provider/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Support</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li className="flex items-center">
+              <h4 className="font-semibold mb-4">Contact Information</h4>
+              <div className="space-y-2 text-gray-400">
+                <p className="font-medium text-gray-300 mb-2">Email Us</p>
+                <div className="flex items-center mb-2">
                   <Mail className="h-4 w-4 mr-2" />
-                  hello@daycareconcierge.com
-                </li>
-                <li className="flex items-center">
-                  <Phone className="h-4 w-4 mr-2" />
-                  (555) 123-4567
-                </li>
-              </ul>
+                  <span>Info@kinderbridge.com</span>
+                </div>
+                <p className="text-sm text-gray-500">
+                  We typically respond within 24 hours
+                </p>
+              </div>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 DayCare Concierge. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} KinderBridge. All rights
+              reserved.
+            </p>
+            <div className="mt-2 flex justify-center items-center space-x-2">
+              <span className="text-xs text-gray-500">
+                Developed by ASH Web Solutions
+              </span>
+              <a
+                href="https://ashwebsolutions.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-800"
+                title="Visit ASH WEB Solutions"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+        {/* Updated KinderBridge Disclaimer - Added by Abhishek */}
+        <div className="mt-12 pt-8 border-t border-gray-800">
+          <div className="bg-blue-900/20 rounded-2xl p-6 border border-blue-800/40">
+            <div className="flex gap-4 items-start">
+              <div className="flex-shrink-0 mt-1">
+                <svg
+                  className="w-6 h-6 text-orange-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400 leading-relaxed space-y-4">
+                <p>
+                  <span className="font-bold text-gray-300">Disclaimer:</span>{" "}
+                  Every effort is made to ensure that the information on{" "}
+                  <span className="text-blue-400 font-medium">
+                    KinderBridge
+                  </span>{" "}
+                  is accurate, up-to-date, and comprehensive. However,{" "}
+                  <span className="font-bold text-gray-300">
+                    KinderBridge cannot assume liability resulting from errors
+                    or omissions.
+                  </span>{" "}
+                  Inclusion or omission of a program or service is not a comment
+                  on its quality.
+                </p>
+                <p>
+                  Records in this database are compiled from publicly available
+                  sources including government open data portals, Google Maps,
+                  and individual daycare websites. KinderBridge cannot be held
+                  responsible for the accuracy of information provided by these
+                  external sources.{" "}
+                  <span className="font-bold text-gray-300">
+                    Users are urged to confirm all information independently
+                  </span>{" "}
+                  with daycare providers.
+                </p>
+                <p>
+                  KinderBridge is{" "}
+                  <span className="font-bold text-gray-300">
+                    not affiliated with, endorsed by, or partnered with
+                  </span>{" "}
+                  any daycare centers, childcare providers, or government
+                  agencies. Waitlist positions and availability estimates may
+                  not reflect real-time status. If you have questions, please
+                  see our{" "}
+                  <Link href="/terms" className="text-blue-400 hover:underline">
+                    Terms of Use
+                  </Link>{" "}
+                  or{" "}
+                  <Link
+                    href="/contact"
+                    className="text-blue-400 hover:underline"
+                  >
+                    contact us
+                  </Link>
+                  .
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

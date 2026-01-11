@@ -264,20 +264,6 @@ export default function AboutPage() {
               </p>
             </div>
             {/* --- INSERT END --- */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/register"
-                className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-medium transition-colors"
-              >
-                Get Started Free
-              </Link>
-              <Link
-                href="/search"
-                className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 rounded-lg font-medium transition-colors"
-              >
-                Browse daycare
-              </Link>
-            </div>
           </motion.div>
         </div>
       </section>
