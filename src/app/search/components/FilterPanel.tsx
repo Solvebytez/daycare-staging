@@ -51,7 +51,6 @@ interface FilterPanelProps {
     price: boolean;
     type: boolean;
     ageRange: boolean;
-    availability: boolean;
     vacancy: boolean;
   };
   setExpandedSections: (
