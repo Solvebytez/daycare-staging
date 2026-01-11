@@ -59,9 +59,6 @@ function SearchPageContent() {
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedAgeRange, setSelectedAgeRange] = useState<string>("");
-  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
-    []
-  );
   const [selectedVacancy, setSelectedVacancy] = useState<string[]>([]);
   const [selectedWard, setSelectedWard] = useState("");
   const [cwelccParticipating, setCwelccParticipating] = useState(false);
@@ -102,7 +99,6 @@ function SearchPageContent() {
     price: false,
     type: false,
     ageRange: false,
-    availability: false,
     vacancy: false,
   });
 
@@ -122,7 +118,6 @@ function SearchPageContent() {
     selectedPriceRange: "",
     selectedTypes: [] as string[],
     selectedAgeRange: "",
-    selectedAvailability: [] as string[],
     selectedVacancy: [] as string[],
     selectedWard: "",
     cwelccParticipating: false,
@@ -150,7 +145,6 @@ function SearchPageContent() {
     if (selectedPriceRange) currentParams.set("priceRange", selectedPriceRange);
     if (selectedTypes.length > 0) currentParams.set("types", selectedTypes.join(","));
     if (selectedAgeRange) currentParams.set("ageRange", selectedAgeRange);
-    if (selectedAvailability.length > 0) currentParams.set("availability", selectedAvailability.join(","));
     if (selectedVacancy.length > 0) currentParams.set("vacancy", selectedVacancy.join(","));
     if (selectedWard) currentParams.set("ward", selectedWard);
     if (cwelccParticipating) currentParams.set("cwelcc", "true");
@@ -216,13 +210,6 @@ function SearchPageContent() {
     const ageRange = params.get("ageRange") || "";
     if (ageRange !== selectedAgeRange) {
       setSelectedAgeRange(ageRange);
-    }
-    
-    // Sync availability
-    const availability = params.get("availability");
-    const availabilityArray = availability ? availability.split(",").filter(Boolean) : [];
-    if (JSON.stringify(availabilityArray) !== JSON.stringify(selectedAvailability)) {
-      setSelectedAvailability(availabilityArray);
     }
     
     // Sync vacancy
@@ -333,12 +320,6 @@ function SearchPageContent() {
     const ageRange = params.get("ageRange") || "";
     if (ageRange) {
       setSelectedAgeRange(ageRange);
-    }
-    
-    // Read availability (comma-separated)
-    const availability = params.get("availability");
-    if (availability) {
-      setSelectedAvailability(availability.split(",").filter(Boolean));
     }
     
     // Read ward (decode URL-encoded values like + to spaces)
@@ -475,7 +456,6 @@ function SearchPageContent() {
       selectedPriceRange,
       selectedTypes,
       selectedAgeRange,
-      selectedAvailability,
       selectedVacancy,
       selectedWard,
       cwelccParticipating,
@@ -491,7 +471,6 @@ function SearchPageContent() {
       prevFiltersRef.current.selectedPriceRange !== currentFilters.selectedPriceRange ||
       JSON.stringify(prevFiltersRef.current.selectedTypes) !== JSON.stringify(currentFilters.selectedTypes) ||
       prevFiltersRef.current.selectedAgeRange !== currentFilters.selectedAgeRange ||
-      JSON.stringify(prevFiltersRef.current.selectedAvailability) !== JSON.stringify(currentFilters.selectedAvailability) ||
       JSON.stringify(prevFiltersRef.current.selectedVacancy) !== JSON.stringify(currentFilters.selectedVacancy) ||
       prevFiltersRef.current.selectedWard !== currentFilters.selectedWard ||
       prevFiltersRef.current.cwelccParticipating !== currentFilters.cwelccParticipating ||
@@ -512,7 +491,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedAvailability,
     selectedVacancy,
     selectedWard,
     cwelccParticipating,
@@ -551,11 +529,6 @@ function SearchPageContent() {
     // Add age range
     if (selectedAgeRange) {
       params.set("ageRange", selectedAgeRange);
-    }
-    
-    // Add availability
-    if (selectedAvailability.length > 0) {
-      params.set("availability", selectedAvailability.join(","));
     }
     
     // Add vacancy
@@ -631,7 +604,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedAvailability,
     selectedVacancy,
     selectedWard,
     cwelccParticipating,
@@ -685,7 +657,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedAvailability,
     selectedVacancy,
     selectedWard,
     cwelccParticipating,
@@ -694,23 +665,16 @@ function SearchPageContent() {
     sortOrder,
   ]);
 
-  // Availability should be automatically set to "Yes" when Age Range is selected.
-  // Vacancy always resets to "Yes" when Age Range changes (until user changes it to "No").
+  // Vacancy filter commented out for now
+  /*
   useEffect(() => {
     if (!selectedAgeRange) {
-      // If user clears age range, clear availability and vacancy
-      if (selectedAvailability.length > 0) setSelectedAvailability([]);
       if (selectedVacancy.length > 0) setSelectedVacancy([]);
       return;
     }
-
-    // Age Range chosen: always set availability to "Yes" (hidden filter, filters by capacity)
-    setSelectedAvailability(["yes"]);
-    
-    // Age Range chosen/changed: always reset vacancy to "Yes" when age range changes
-    // This will reset vacancy to "Yes" every time user switches between age range options
     setSelectedVacancy(["yes"]);
   }, [selectedAgeRange]);
+  */
 
   const escapeRegex = useCallback((value: string) => {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -752,19 +716,16 @@ function SearchPageContent() {
     // Age range
     if (selectedAgeRange) {
       params.ageRange = selectedAgeRange;
+      // Automatically set availability=yes (filters by capacity > 0)
+      params.availability = "yes";
     }
 
-    // Availability cascade: filters by ageGroups.{group}.capacity
-    // Only meaningful when ageRange is selected
-    if (selectedAgeRange && selectedAvailability.length > 0) {
-      params.availability = selectedAvailability[0];
-    }
-
-    // Vacancy cascade: filters by ageGroups.{group}.vacancy
-    // Only meaningful when ageRange is selected
+    // Vacancy filter commented out for now
+    /*
     if (selectedAgeRange && selectedVacancy.length > 0) {
       params.vacancy = selectedVacancy[0];
     }
+    */
 
     // Ward
     if (selectedWard) {
@@ -790,7 +751,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedAvailability,
     selectedVacancy,
     selectedWard,
     cwelccParticipating,
@@ -833,17 +793,16 @@ function SearchPageContent() {
     // Age range
     if (selectedAgeRange) {
       params.ageRange = selectedAgeRange;
+      // Automatically set availability=yes (filters by capacity > 0)
+      params.availability = "yes";
     }
 
-    // Availability cascade: filters by ageGroups.{group}.capacity
-    if (selectedAgeRange && selectedAvailability.length > 0) {
-      params.availability = selectedAvailability[0];
-    }
-
-    // Vacancy cascade: filters by ageGroups.{group}.vacancy
+    // Vacancy filter commented out for now
+    /*
     if (selectedAgeRange && selectedVacancy.length > 0) {
       params.vacancy = selectedVacancy[0];
     }
+    */
 
     // Ward
     if (selectedWard) {
@@ -867,7 +826,6 @@ function SearchPageContent() {
     selectedPriceRange,
     selectedTypes,
     selectedAgeRange,
-    selectedAvailability,
     selectedVacancy,
     selectedWard,
     cwelccParticipating,
@@ -1508,8 +1466,6 @@ function SearchPageContent() {
                 setSelectedTypes={setSelectedTypes}
                 selectedAgeRange={selectedAgeRange}
                 setSelectedAgeRange={setSelectedAgeRange}
-                selectedAvailability={selectedAvailability}
-                setSelectedAvailability={setSelectedAvailability}
                 selectedVacancy={selectedVacancy}
                 setSelectedVacancy={setSelectedVacancy}
                 selectedWard={selectedWard}
