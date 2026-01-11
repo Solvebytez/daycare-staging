@@ -695,7 +695,7 @@ function SearchPageContent() {
   ]);
 
   // Availability should be selectable only after Age Range is chosen.
-  // Default to "No" once Age Range is selected.
+  // Default to "Yes" once Age Range is selected.
   useEffect(() => {
     if (!selectedAgeRange) {
       // If user clears age range, also clear availability and vacancy (and UI will disable them)
@@ -704,13 +704,13 @@ function SearchPageContent() {
       return;
     }
 
-    // Age Range chosen: default availability to "No" if not set yet
+    // Age Range chosen: default availability to "Yes" if not set yet
     if (selectedAvailability.length === 0) {
-      setSelectedAvailability(["no"]);
+      setSelectedAvailability(["yes"]);
     }
-    // Age Range chosen: default vacancy to "No" if not set yet
+    // Age Range chosen: default vacancy to "Yes" if not set yet
     if (selectedVacancy.length === 0) {
-      setSelectedVacancy(["no"]);
+      setSelectedVacancy(["yes"]);
     }
   }, [selectedAgeRange, selectedAvailability, selectedVacancy]);
 
