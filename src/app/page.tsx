@@ -25,33 +25,81 @@ export default function HomePage() {
     location?: string;
   }>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   // Fetch regions from database
   const { data: regionsResponse, isLoading: regionsLoading } = useQuery({
     queryKey: ["daycares", "regions"],
     queryFn: async () => {
       const response = await apiClient.get("/api/daycares/regions/all");
-      console.log("🏠 [HOME PAGE] API Response:", response);
+      console.log("🏠 [HOME PAGE] Full API Response:", response);
       console.log("🏠 [HOME PAGE] response.data:", response.data);
+      console.log("🏠 [HOME PAGE] response.data.data:", response.data?.data);
       return response.data;
     },
-    staleTime: 15 * 60 * 1000, // 15 minutes - regions rarely change
+    staleTime: 0, // Always refetch to get latest data
     gcTime: 30 * 60 * 1000, // 30 minutes - keep cached longer
-    refetchOnMount: false, // Don't refetch if we have cached data
-    refetchOnWindowFocus: false,
+    refetchOnMount: true, // Always refetch on mount
+    refetchOnWindowFocus: true,
   });
 
   console.log("🏠 [HOME PAGE] regionsResponse:", regionsResponse);
   console.log("🏠 [HOME PAGE] regionsResponse?.data:", regionsResponse?.data);
 
-  const regions: string[] = Array.isArray(regionsResponse?.data)
-    ? regionsResponse.data
-    : Array.isArray(regionsResponse)
-    ? regionsResponse
-    : [];
+  // Parse regions from API response - handle different response structures
+  const allRegions: string[] = (() => {
+    if (!regionsResponse) {
+      console.log("🏠 [HOME PAGE] No regionsResponse");
+      return [];
+    }
+    
+    console.log("🏠 [HOME PAGE] regionsResponse type:", typeof regionsResponse);
+    console.log("🏠 [HOME PAGE] Is regionsResponse array?", Array.isArray(regionsResponse));
+    
+    // If response.data is an array, use it
+    if (Array.isArray(regionsResponse.data)) {
+      console.log("🏠 [HOME PAGE] Found regions in regionsResponse.data, count:", regionsResponse.data.length);
+      return regionsResponse.data;
+    }
+    
+    // If response itself is an array, use it
+    if (Array.isArray(regionsResponse)) {
+      console.log("🏠 [HOME PAGE] regionsResponse is array, count:", regionsResponse.length);
+      return regionsResponse;
+    }
+    
+    // If response has a nested data structure, try to extract it
+    if (regionsResponse.data && Array.isArray(regionsResponse.data.data)) {
+      console.log("🏠 [HOME PAGE] Found regions in regionsResponse.data.data, count:", regionsResponse.data.data.length);
+      return regionsResponse.data.data;
+    }
+    
+    console.log("🏠 [HOME PAGE] Could not parse regions, returning empty array");
+    return [];
+  })();
+  
+  console.log("🏠 [HOME PAGE] Final allRegions count:", allRegions.length);
+  console.log("🏠 [HOME PAGE] Final allRegions:", allRegions);
 
-  console.log("🏠 [HOME PAGE] Final regions array:", regions);
-  console.log("🏠 [HOME PAGE] Regions count:", regions.length);
+  // Filter regions based on input (case-insensitive)
+  const filteredRegions = allRegions.filter((region) =>
+    region.toLowerCase().includes(location.toLowerCase())
+  );
+
+  // Use filtered regions when user is typing, otherwise show all
+  const regions: string[] = location.trim() ? filteredRegions : allRegions;
+
+  console.log("🏠 [HOME PAGE] All regions count:", allRegions.length);
+  console.log("🏠 [HOME PAGE] Filtered regions count:", regions.length);
 
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
@@ -70,7 +118,7 @@ export default function HomePage() {
       }
 
       // Validate location: must be from the dropdown (valid region)
-      if (hasLocation && !regions.includes(location.trim())) {
+      if (hasLocation && !allRegions.includes(location.trim())) {
         newErrors.location = "Please select a valid location from the dropdown";
         setErrors(newErrors);
         return;
@@ -85,7 +133,7 @@ export default function HomePage() {
 
       window.location.href = `/search?${params.toString()}`;
     },
-    [location, regions]
+    [location, allRegions]
   );
 
   const selectRegion = useCallback(
@@ -125,7 +173,7 @@ export default function HomePage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative" style={{ overflow: 'visible' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <motion.h1
@@ -155,15 +203,18 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
               className="max-w-4xl mx-auto mb-16"
+              style={{ overflow: 'visible' }}
             >
               <form
                 onSubmit={handleSearch}
                 className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200"
+                style={{ overflow: 'visible' }}
               >
-                <div className="flex flex-col sm:flex-row gap-4 items-start">
+                <div className="flex flex-col sm:flex-row gap-4 items-start" style={{ overflow: 'visible' }}>
                   <div
                     ref={dropdownRef}
                     className="relative flex-1 w-full sm:w-auto"
+                    style={{ overflow: 'visible', zIndex: 50 }}
                   >
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
@@ -195,29 +246,48 @@ export default function HomePage() {
                     )}
                     {/* Region Dropdown */}
                     {showLocationDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                      <div 
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
+                        style={{ 
+                          maxHeight: isDesktop ? '500px' : '400px',
+                          overflow: 'hidden',
+                          zIndex: 9999,
+                          position: 'absolute'
+                        }}
+                      >
                         {regionsLoading ? (
                           <div className="px-4 py-2 text-gray-500 text-center rounded-lg">
                             Loading regions...
                           </div>
                         ) : regions.length > 0 ? (
-                          <div className="rounded-lg overflow-hidden max-h-[280px] overflow-y-auto">
+                          <div 
+                            className="overflow-y-auto"
+                            style={{ 
+                              maxHeight: isDesktop ? '500px' : '400px',
+                              paddingBottom: '8px',
+                              paddingTop: '4px'
+                            }}
+                          >
                             {regions.map((region, index) => {
                               console.log(
-                                `🏠 [HOME PAGE] Rendering region ${index + 1}:`,
+                                `🏠 [HOME PAGE] Rendering region ${index + 1}/${regions.length}:`,
                                 region
                               );
                               return (
                                 <button
-                                  key={region}
+                                  key={`${region}-${index}`}
                                   type="button"
                                   onClick={() => selectRegion(region)}
-                                  className="w-full px-4 py-3 text-left text-gray-800 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                  className="w-full px-4 py-3 text-left text-gray-800 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-gray-100 last:border-b-0"
                                 >
                                   {region}
                                 </button>
                               );
                             })}
+                          </div>
+                        ) : location.trim() ? (
+                          <div className="px-4 py-2 text-gray-500 text-center rounded-lg">
+                            No regions found matching &quot;{location}&quot;
                           </div>
                         ) : (
                           <div className="px-4 py-2 text-gray-500 text-center rounded-lg">
