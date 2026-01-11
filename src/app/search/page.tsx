@@ -694,25 +694,23 @@ function SearchPageContent() {
     sortOrder,
   ]);
 
-  // Availability should be selectable only after Age Range is chosen.
-  // Default to "Yes" once Age Range is selected.
+  // Availability should be automatically set to "Yes" when Age Range is selected.
+  // Vacancy always resets to "Yes" when Age Range changes (until user changes it to "No").
   useEffect(() => {
     if (!selectedAgeRange) {
-      // If user clears age range, also clear availability and vacancy (and UI will disable them)
+      // If user clears age range, clear availability and vacancy
       if (selectedAvailability.length > 0) setSelectedAvailability([]);
       if (selectedVacancy.length > 0) setSelectedVacancy([]);
       return;
     }
 
-    // Age Range chosen: default availability to "Yes" if not set yet
-    if (selectedAvailability.length === 0) {
-      setSelectedAvailability(["yes"]);
-    }
-    // Age Range chosen: default vacancy to "Yes" if not set yet
-    if (selectedVacancy.length === 0) {
-      setSelectedVacancy(["yes"]);
-    }
-  }, [selectedAgeRange, selectedAvailability, selectedVacancy]);
+    // Age Range chosen: always set availability to "Yes" (hidden filter, filters by capacity)
+    setSelectedAvailability(["yes"]);
+    
+    // Age Range chosen/changed: always reset vacancy to "Yes" when age range changes
+    // This will reset vacancy to "Yes" every time user switches between age range options
+    setSelectedVacancy(["yes"]);
+  }, [selectedAgeRange]);
 
   const escapeRegex = useCallback((value: string) => {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
