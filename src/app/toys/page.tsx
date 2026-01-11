@@ -1195,7 +1195,7 @@ export default function ToysPage() {
                 <p className="font-medium text-gray-300 mb-2">Email Us</p>
                 <div className="flex items-center mb-2">
                   <Mail className="h-4 w-4 mr-2" />
-                  <span>Info@kinderbridge.com</span>
+                  <span>Info@kinderbridge.ca</span>
                 </div>
                 <p className="text-sm text-gray-500">
                   We typically respond within 24 hours
