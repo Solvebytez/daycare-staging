@@ -429,169 +429,6 @@ export default function FilterPanel({
         </div>
       </div>
 
-      {/* Sort & Order */}
-      <div className="mb-6">
-        <button
-          onClick={() => toggleSection("sort")}
-          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-            Sort & Order
-          </h3>
-          {expandedSections.sort ? (
-            <ChevronUp className="h-5 w-5 text-gray-500 group-hover:text-blue-600 transition-colors" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-blue-600 transition-colors" />
-          )}
-        </button>
-        {expandedSections.sort && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="mt-4 space-y-4 pl-4 overflow-hidden"
-          >
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Sort by:
-              </h4>
-              {["name", "rating", "price", "distance"].map((option) => (
-                <label
-                  key={option}
-                  className="flex items-center space-x-3 cursor-pointer group hover:bg-blue-50 p-2 rounded-lg transition-colors"
-                >
-                  <input
-                    type="radio"
-                    name="sortBy"
-                    value={option}
-                    checked={sortBy === option}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="text-sm text-gray-700 capitalize group-hover:text-blue-700 transition-colors">
-                    {option}
-                  </span>
-                </label>
-              ))}
-            </div>
-
-            <div className="space-y-3 pt-3 border-t border-gray-200">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Order:</h4>
-              {["asc", "desc"].map((order) => (
-                <label
-                  key={order}
-                  className="flex items-center space-x-3 cursor-pointer group hover:bg-blue-50 p-2 rounded-lg transition-colors"
-                >
-                  <input
-                    type="radio"
-                    name="sortOrder"
-                    value={order}
-                    checked={sortOrder === order}
-                    onChange={(e) => setSortOrder(e.target.value)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="text-sm text-gray-700 capitalize group-hover:text-blue-700 transition-colors">
-                    {order === "asc" ? "Low to High" : "High to Low"}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </div>
-
-      {/* Price Range */}
-      <div className="mb-6">
-        <button
-          onClick={() => toggleSection("price")}
-          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-            Price Range
-          </h3>
-          {expandedSections.price ? (
-            <ChevronUp className="h-5 w-5 text-gray-500 group-hover:text-purple-600 transition-colors" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-purple-600 transition-colors" />
-          )}
-        </button>
-        {expandedSections.price && (
-          <div className="mt-4 space-y-3 pl-4">
-            {[
-              { value: "low", label: "Under $1,200/month" },
-              { value: "medium", label: "$1,200 - $1,800/month" },
-              { value: "high", label: "Over $1,800/month" },
-            ].map((range) => (
-              <label
-                key={range.value}
-                className="flex items-center space-x-3 cursor-pointer group hover:bg-purple-50 p-2 rounded-lg transition-colors"
-              >
-                <input
-                  type="radio"
-                  name="priceRange"
-                  value={range.value}
-                  checked={selectedPriceRange === range.value}
-                  onChange={(e) => setSelectedPriceRange(e.target.value)}
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
-                />
-                <span className="text-gray-700 group-hover:text-purple-700 transition-colors">
-                  {range.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Type */}
-      <div className="mb-6">
-        <button
-          onClick={() => toggleSection("type")}
-          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-            Type
-          </h3>
-          {expandedSections.type ? (
-            <ChevronUp className="h-5 w-5 text-gray-500 group-hover:text-orange-600 transition-colors" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-orange-600 transition-colors" />
-          )}
-        </button>
-        {expandedSections.type && (
-          <div className="mt-4 space-y-3 pl-4">
-            {TYPE_OPTIONS.map((opt) => (
-              <label
-                key={opt.value}
-                className="flex items-center space-x-3 cursor-pointer group hover:bg-orange-50 p-2 rounded-lg transition-colors"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedTypes.includes(opt.value)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedTypes([...selectedTypes, opt.value]);
-                    } else {
-                      setSelectedTypes(
-                        selectedTypes.filter((t) => t !== opt.value)
-                      );
-                    }
-                  }}
-                  className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                />
-                <span className="text-gray-700 group-hover:text-orange-700 transition-colors">
-                  {opt.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Age Range */}
       <div className="mb-6">
         <button
@@ -701,6 +538,169 @@ export default function FilterPanel({
               </button>
             )}
           </div>
+        )}
+      </div>
+
+      {/* Type */}
+      <div className="mb-6">
+        <button
+          onClick={() => toggleSection("type")}
+          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+            Type
+          </h3>
+          {expandedSections.type ? (
+            <ChevronUp className="h-5 w-5 text-gray-500 group-hover:text-orange-600 transition-colors" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-orange-600 transition-colors" />
+          )}
+        </button>
+        {expandedSections.type && (
+          <div className="mt-4 space-y-3 pl-4">
+            {TYPE_OPTIONS.map((opt) => (
+              <label
+                key={opt.value}
+                className="flex items-center space-x-3 cursor-pointer group hover:bg-orange-50 p-2 rounded-lg transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes(opt.value)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, opt.value]);
+                    } else {
+                      setSelectedTypes(
+                        selectedTypes.filter((t) => t !== opt.value)
+                      );
+                    }
+                  }}
+                  className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                />
+                <span className="text-gray-700 group-hover:text-orange-700 transition-colors">
+                  {opt.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Price Range */}
+      <div className="mb-6">
+        <button
+          onClick={() => toggleSection("price")}
+          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
+            Price Range
+          </h3>
+          {expandedSections.price ? (
+            <ChevronUp className="h-5 w-5 text-gray-500 group-hover:text-purple-600 transition-colors" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-purple-600 transition-colors" />
+          )}
+        </button>
+        {expandedSections.price && (
+          <div className="mt-4 space-y-3 pl-4">
+            {[
+              { value: "low", label: "Under $1,200/month" },
+              { value: "medium", label: "$1,200 - $1,800/month" },
+              { value: "high", label: "Over $1,800/month" },
+            ].map((range) => (
+              <label
+                key={range.value}
+                className="flex items-center space-x-3 cursor-pointer group hover:bg-purple-50 p-2 rounded-lg transition-colors"
+              >
+                <input
+                  type="radio"
+                  name="priceRange"
+                  value={range.value}
+                  checked={selectedPriceRange === range.value}
+                  onChange={(e) => setSelectedPriceRange(e.target.value)}
+                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                />
+                <span className="text-gray-700 group-hover:text-purple-700 transition-colors">
+                  {range.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sort & Order */}
+      <div className="mb-6">
+        <button
+          onClick={() => toggleSection("sort")}
+          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+            Sort & Order
+          </h3>
+          {expandedSections.sort ? (
+            <ChevronUp className="h-5 w-5 text-gray-500 group-hover:text-blue-600 transition-colors" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-blue-600 transition-colors" />
+          )}
+        </button>
+        {expandedSections.sort && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="mt-4 space-y-4 pl-4 overflow-hidden"
+          >
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                Sort by:
+              </h4>
+              {["name", "rating", "price", "distance"].map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center space-x-3 cursor-pointer group hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name="sortBy"
+                    value={option}
+                    checked={sortBy === option}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="text-sm text-gray-700 capitalize group-hover:text-blue-700 transition-colors">
+                    {option}
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <div className="space-y-3 pt-3 border-t border-gray-200">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Order:</h4>
+              {["asc", "desc"].map((order) => (
+                <label
+                  key={order}
+                  className="flex items-center space-x-3 cursor-pointer group hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name="sortOrder"
+                    value={order}
+                    checked={sortOrder === order}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="text-sm text-gray-700 capitalize group-hover:text-blue-700 transition-colors">
+                    {order === "asc" ? "Low to High" : "High to Low"}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </motion.div>
         )}
       </div>
 
