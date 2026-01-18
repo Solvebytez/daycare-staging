@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Navigation from "../components/Navigation";
+import VacancyBanner from "../components/VacancyBanner";
 import { apiClient } from "../lib/api";
 
 export default function HomePage() {
@@ -312,6 +313,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Vacancy Banner - v14.0.0 */}
+      <div className="relative z-10">
+        <VacancyBanner />
+      </div>
 
       {/* CTA Section - Updated by Abhishek */}
       {/* 1. CLOSED THE GAP: Added pb-0 and negative margin fix */}

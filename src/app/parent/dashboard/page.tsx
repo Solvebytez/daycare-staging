@@ -591,7 +591,7 @@ export default function ParentDashboard() {
                               </span>
                             </div>
                             <Link
-                              href={`/daycare/${search.id}`}
+                              href={`/daycare/${(search as any).slug || search.id}`}
                               className="block w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 sm:px-4 rounded-lg font-medium transition-colors text-center text-sm sm:text-base"
                             >
                               View Details

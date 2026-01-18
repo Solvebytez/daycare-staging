@@ -79,12 +79,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const data = await response.json();
       const daycares = data.success ? (data.data as any[]) : [];
 
+      // v15.0.0 - Use slug for better SEO (fallback to ID for backward compatibility)
       daycarePages = daycares
         .filter((daycare) => daycare._id || daycare.id) // Only include daycares with valid IDs
         .map((daycare) => {
-          const daycareId = daycare._id || daycare.id || '';
+          const slug = (daycare as any).slug || daycare._id || daycare.id || '';
           return {
-            url: `${baseUrl}/daycare/${daycareId}`,
+            url: `${baseUrl}/daycare/${slug}`,
             lastModified: new Date(),
             changeFrequency: 'weekly' as const,
             priority: 0.8,
@@ -102,12 +103,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ? daycaresData.default as any[]
         : [];
 
+      // v15.0.0 - Use slug for better SEO (fallback to ID for backward compatibility)
       daycarePages = daycares
         .filter((daycare) => daycare.id || daycare._id) // Only include daycares with valid IDs
         .map((daycare) => {
-          const daycareId = daycare._id || daycare.id || '';
+          const slug = (daycare as any).slug || daycare._id || daycare.id || '';
           return {
-            url: `${baseUrl}/daycare/${daycareId}`,
+            url: `${baseUrl}/daycare/${slug}`,
             lastModified: new Date(),
             changeFrequency: 'weekly' as const,
             priority: 0.8,

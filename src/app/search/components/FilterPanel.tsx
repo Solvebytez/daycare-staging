@@ -32,10 +32,8 @@ interface FilterPanelProps {
   setSelectedTypes: (value: string[] | ((prev: string[]) => string[])) => void;
   selectedAgeRange: string;
   setSelectedAgeRange: (value: string) => void;
-  selectedVacancy: string[];
-  setSelectedVacancy: (
-    value: string[] | ((prev: string[]) => string[])
-  ) => void;
+  selectedVacancy: string;
+  setSelectedVacancy: (value: string) => void;
   selectedWard: string;
   setSelectedWard: (value: string) => void;
   cwelccParticipating: boolean;
@@ -238,7 +236,7 @@ export default function FilterPanel({
     setSelectedPriceRange("");
     setSelectedTypes([]);
     setSelectedAgeRange("");
-    setSelectedVacancy([]);
+    setSelectedVacancy("");
     setSelectedWard("");
     setCwelccParticipating(false);
     setAcceptsSubsidy(false);
@@ -465,6 +463,8 @@ export default function FilterPanel({
                   checked={selectedAgeRange === range.value}
                   onChange={(e) => {
                     setSelectedAgeRange(e.target.value);
+                    // Clear vacancy when age range changes
+                    setSelectedVacancy("");
                   }}
                   className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300"
                 />
@@ -476,6 +476,53 @@ export default function FilterPanel({
           </div>
         )}
       </div>
+
+      {/* Vacancy Filter (Yes/No) - Only show when age range is selected */}
+      {selectedAgeRange && (
+        <div className="mb-6">
+          <button
+            onClick={() => toggleSection("vacancy")}
+            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+              Vacancy
+            </h3>
+            {expandedSections.vacancy ? (
+              <ChevronUp className="h-5 w-5 text-gray-500 group-hover:text-blue-600 transition-colors" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-blue-600 transition-colors" />
+            )}
+          </button>
+          {expandedSections.vacancy && (
+            <div className="mt-4 space-y-3 pl-4">
+              {[
+                { value: "yes", label: "Yes" },
+                { value: "no", label: "No" },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className="flex items-center space-x-3 cursor-pointer group hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name="vacancy"
+                    value={option.value}
+                    checked={selectedVacancy === option.value}
+                    onChange={(e) => {
+                      setSelectedVacancy(e.target.value);
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="text-gray-700 group-hover:text-blue-700 transition-colors">
+                    {option.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Type */}
       <div className="mb-6">

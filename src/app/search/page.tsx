@@ -59,7 +59,7 @@ function SearchPageContent() {
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedAgeRange, setSelectedAgeRange] = useState<string>("");
-  const [selectedVacancy, setSelectedVacancy] = useState<string[]>([]);
+  const [selectedVacancy, setSelectedVacancy] = useState<string>("");
   const [selectedWard, setSelectedWard] = useState("");
   const [cwelccParticipating, setCwelccParticipating] = useState(false);
   const [acceptsSubsidy, setAcceptsSubsidy] = useState(false);
@@ -94,7 +94,13 @@ function SearchPageContent() {
   const [showContactLogModal, setShowContactLogModal] = useState(false);
 
   // Filter section states - all collapsed by default
-  const [expandedSections, setExpandedSections] = useState({
+  const [expandedSections, setExpandedSections] = useState<{
+    sort: boolean;
+    price: boolean;
+    type: boolean;
+    ageRange: boolean;
+    vacancy: boolean;
+  }>({
     sort: false,
     price: false,
     type: false,
@@ -118,7 +124,6 @@ function SearchPageContent() {
     selectedPriceRange: "",
     selectedTypes: [] as string[],
     selectedAgeRange: "",
-    selectedVacancy: [] as string[],
     selectedWard: "",
     cwelccParticipating: false,
     acceptsSubsidy: false,
@@ -145,7 +150,7 @@ function SearchPageContent() {
     if (selectedPriceRange) currentParams.set("priceRange", selectedPriceRange);
     if (selectedTypes.length > 0) currentParams.set("types", selectedTypes.join(","));
     if (selectedAgeRange) currentParams.set("ageRange", selectedAgeRange);
-    if (selectedVacancy.length > 0) currentParams.set("vacancy", selectedVacancy.join(","));
+    if (selectedVacancy) currentParams.set("vacancy", selectedVacancy);
     if (selectedWard) currentParams.set("ward", selectedWard);
     if (cwelccParticipating) currentParams.set("cwelcc", "true");
     if (acceptsSubsidy) currentParams.set("subsidy", "true");
@@ -210,13 +215,20 @@ function SearchPageContent() {
     const ageRange = params.get("ageRange") || "";
     if (ageRange !== selectedAgeRange) {
       setSelectedAgeRange(ageRange);
+      // Expand age range section when ageRange is in URL
+      if (ageRange) {
+        setExpandedSections((prev) => ({ ...prev, ageRange: true }));
+      }
     }
     
     // Sync vacancy
-    const vacancy = params.get("vacancy");
-    const vacancyArray = vacancy ? vacancy.split(",").filter(Boolean) : [];
-    if (JSON.stringify(vacancyArray) !== JSON.stringify(selectedVacancy)) {
-      setSelectedVacancy(vacancyArray);
+    const vacancy = params.get("vacancy") || "";
+    if (vacancy !== selectedVacancy) {
+      setSelectedVacancy(vacancy);
+      // Expand vacancy section when vacancy is in URL and age range is selected
+      if (vacancy && ageRange) {
+        setExpandedSections((prev) => ({ ...prev, vacancy: true }));
+      }
     }
     
     // Sync ward (decode URL-encoded values)
@@ -320,6 +332,18 @@ function SearchPageContent() {
     const ageRange = params.get("ageRange") || "";
     if (ageRange) {
       setSelectedAgeRange(ageRange);
+      // Expand age range section when ageRange is in URL
+      setExpandedSections((prev) => ({ ...prev, ageRange: true }));
+    }
+    
+    // Read vacancy
+    const vacancy = params.get("vacancy") || "";
+    if (vacancy) {
+      setSelectedVacancy(vacancy);
+      // Expand vacancy section when vacancy is in URL and age range is selected
+      if (ageRange) {
+        setExpandedSections((prev) => ({ ...prev, vacancy: true }));
+      }
     }
     
     // Read ward (decode URL-encoded values like + to spaces)
@@ -471,7 +495,7 @@ function SearchPageContent() {
       prevFiltersRef.current.selectedPriceRange !== currentFilters.selectedPriceRange ||
       JSON.stringify(prevFiltersRef.current.selectedTypes) !== JSON.stringify(currentFilters.selectedTypes) ||
       prevFiltersRef.current.selectedAgeRange !== currentFilters.selectedAgeRange ||
-      JSON.stringify(prevFiltersRef.current.selectedVacancy) !== JSON.stringify(currentFilters.selectedVacancy) ||
+      prevFiltersRef.current.selectedVacancy !== currentFilters.selectedVacancy ||
       prevFiltersRef.current.selectedWard !== currentFilters.selectedWard ||
       prevFiltersRef.current.cwelccParticipating !== currentFilters.cwelccParticipating ||
       prevFiltersRef.current.acceptsSubsidy !== currentFilters.acceptsSubsidy ||
@@ -532,8 +556,8 @@ function SearchPageContent() {
     }
     
     // Add vacancy
-    if (selectedVacancy.length > 0) {
-      params.set("vacancy", selectedVacancy.join(","));
+    if (selectedVacancy) {
+      params.set("vacancy", selectedVacancy);
     }
     
     // Add ward
@@ -713,19 +737,17 @@ function SearchPageContent() {
       params.daycareType = selectedTypes.map(escapeRegex).join("|");
     }
 
-    // Age range
+    // Age range - automatically filters by capacity > 0 (original behavior)
     if (selectedAgeRange) {
       params.ageRange = selectedAgeRange;
       // Automatically set availability=yes (filters by capacity > 0)
       params.availability = "yes";
+      
+      // Vacancy filter (Yes/No) - only send if explicitly selected
+      if (selectedVacancy) {
+        params.vacancy = selectedVacancy;
+      }
     }
-
-    // Vacancy filter commented out for now
-    /*
-    if (selectedAgeRange && selectedVacancy.length > 0) {
-      params.vacancy = selectedVacancy[0];
-    }
-    */
 
     // Ward
     if (selectedWard) {
@@ -1066,9 +1088,12 @@ function SearchPageContent() {
   const daycaresData = useMemo(() => {
     const data = daycaresResponse?.data || [];
     // Transform API response: map _id to id (MongoDB returns _id, but frontend expects id)
+    // v15.0.0 - include slug for SEO-friendly URLs
     const transformedData = data.map((daycare: any) => ({
       ...daycare,
       id: daycare._id || daycare.id || "",
+      slug: daycare.slug || daycare._id || daycare.id || "", // v15.0.0 - include slug
+      slug: daycare.slug || daycare._id || daycare.id || "", // Use slug if available, fallback to id
     }));
     return transformedData;
   }, [daycaresResponse?.data]);
@@ -1134,7 +1159,7 @@ function SearchPageContent() {
   // Guest users see only 4 results
   // Logged-in users see 15 results per page (backend pagination)
   const isGuest = !user && !authLoading;
-  const guestLimit = 4;
+  const guestLimit = 3;
   const maxResults = isGuest ? guestLimit : resultsPerPage;
 
   // Use sorted daycares as displayed daycares (backend already paginated)
@@ -1157,6 +1182,7 @@ function SearchPageContent() {
     const transformedMapData = mapData.map((daycare: any) => ({
       ...daycare,
       id: daycare._id || daycare.id || "",
+      slug: daycare.slug || daycare._id || daycare.id || "", // v15.0.0 - include slug
     }));
     return transformedMapData.length > 0 ? transformedMapData : displayedDaycares;
   }, [user, authLoading, allDaycaresResponse?.data, displayedDaycares]);
@@ -1279,8 +1305,9 @@ function SearchPageContent() {
     } catch (error) {
       // Silent fail - will rely on browser history
     }
-    // Use Next.js router to preserve browser history
-    router.push(`/daycare/${daycare.id}`);
+    // Use Next.js router to preserve browser history (v15.0.0 - use slug for SEO)
+    const slug = (daycare as any).slug || daycare.id;
+    router.push(`/daycare/${slug}`);
   };
 
   const addToRecentlyViewed = (daycare: Daycare) => {

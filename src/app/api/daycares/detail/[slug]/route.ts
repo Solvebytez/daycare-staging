@@ -3,15 +3,15 @@ import { getApiBaseUrl } from '@/lib/api';
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-  const { id } = await params;
+  const { slug } = await params;
   
   try {
-    // Proxy to backend MongoDB
+    // Proxy to backend MongoDB (v15.0.0 - supports slug)
     const backendUrl = getApiBaseUrl();
     
-    const response = await fetch(`${backendUrl}/api/daycares/detail/${id}`, {
+    const response = await fetch(`${backendUrl}/api/daycares/detail/${slug}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -31,7 +31,10 @@ export async function GET(
     // Fallback to static data if backend is unavailable
     try {
       const daycaresData = await import('@/data/daycares.json');
-      const daycare = daycaresData.default.find((d: { id: string }) => d.id === id);
+      // Try to find by slug first, then by id (backward compatibility)
+      const daycare = daycaresData.default.find(
+        (d: { id: string; slug?: string }) => d.slug === slug || d.id === slug
+      );
       
       if (!daycare) {
         return NextResponse.json(
