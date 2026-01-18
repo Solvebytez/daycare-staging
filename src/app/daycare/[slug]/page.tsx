@@ -123,8 +123,9 @@ export default function DaycareDetailPage({
         } catch (apiError) {
           // If API fails, fallback to local JSON data
           console.warn("API fetch failed, trying local data:", apiError);
+          // Try to find by slug first, then by id (backward compatibility)
           const foundDaycare = daycaresData.find(
-            (d) => d.id === (apiDaycare._id || apiDaycare.id || resolvedParams.slug)
+            (d: any) => d.slug === resolvedParams.slug || d.id === resolvedParams.slug
           );
           if (foundDaycare) {
             setDaycare(foundDaycare);
@@ -166,12 +167,12 @@ export default function DaycareDetailPage({
   };
 
   const toggleFavorite = () => {
-    if (user) {
+    if (user && daycare?.id) {
       // For logged-in users, use API
       if (isFavorite) {
-        removeFavoriteAPI(id);
+        removeFavoriteAPI(daycare.id);
       } else {
-        addFavoriteAPI(id);
+        addFavoriteAPI(daycare.id);
       }
     } else {
       // For guest users, save URL and redirect to login

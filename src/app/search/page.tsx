@@ -124,6 +124,7 @@ function SearchPageContent() {
     selectedPriceRange: "",
     selectedTypes: [] as string[],
     selectedAgeRange: "",
+    selectedVacancy: "",
     selectedWard: "",
     cwelccParticipating: false,
     acceptsSubsidy: false,
@@ -1092,8 +1093,7 @@ function SearchPageContent() {
     const transformedData = data.map((daycare: any) => ({
       ...daycare,
       id: daycare._id || daycare.id || "",
-      slug: daycare.slug || daycare._id || daycare.id || "", // v15.0.0 - include slug
-      slug: daycare.slug || daycare._id || daycare.id || "", // Use slug if available, fallback to id
+      slug: daycare.slug || daycare._id || daycare.id || "", // v15.0.0 - Use slug if available, fallback to id
     }));
     return transformedData;
   }, [daycaresResponse?.data]);
