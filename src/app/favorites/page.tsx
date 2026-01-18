@@ -257,7 +257,7 @@ export default function FavoritesPage() {
                           {formatDaycarePrice(daycare.price, daycare.priceString)}
                         </span>
                         <Link
-                          href={`/daycare/${daycare.id}`}
+                          href={`/daycare/${(daycare as any).slug || daycare.id}`}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         >
                           View Details

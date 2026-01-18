@@ -56,7 +56,7 @@ interface Daycare {
 export default function DaycareDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
   const { user } = useAuth();
   const {
@@ -65,7 +65,7 @@ export default function DaycareDetailPage({
     removeFavorite: removeFavoriteAPI,
   } = useFavorites();
   const [daycare, setDaycare] = useState<Daycare | null>(null);
-  const [id, setId] = useState<string>("");
+  const [slug, setSlug] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,7 +73,7 @@ export default function DaycareDetailPage({
   const favoriteIds = apiFavorites.map(
     (fav) => fav.daycareId || fav.daycare?._id || fav.daycare?.id || ""
   );
-  const isFavorite = id ? favoriteIds.includes(id) : false;
+  const isFavorite = daycare?.id ? favoriteIds.includes(daycare.id) : false;
 
   useEffect(() => {
     // Handle async params and fetch daycare data
@@ -82,18 +82,18 @@ export default function DaycareDetailPage({
         setIsLoading(true);
         setError(null);
         const resolvedParams = await params;
-        setId(resolvedParams.id);
+        setSlug(resolvedParams.slug);
 
-        // Try to fetch from API first
+        // Try to fetch from API first (v15.0.0 - supports slug)
         try {
           const response = await apiClient.get(
-            `/api/daycares/detail/${resolvedParams.id}`
+            `/api/daycares/detail/${resolvedParams.slug}`
           );
           if (response.data.success && response.data.data) {
             const apiDaycare = response.data.data;
             // Transform API response to match Daycare interface
             const transformedDaycare: Daycare = {
-              id: apiDaycare._id || apiDaycare.id || resolvedParams.id,
+              id: apiDaycare._id || apiDaycare.id || resolvedParams.slug,
               name: apiDaycare.name || "Unknown KinderBridge",
               description: apiDaycare.description || "No description available",
               address: apiDaycare.address || "",
@@ -124,7 +124,7 @@ export default function DaycareDetailPage({
           // If API fails, fallback to local JSON data
           console.warn("API fetch failed, trying local data:", apiError);
           const foundDaycare = daycaresData.find(
-            (d) => d.id === resolvedParams.id
+            (d) => d.id === (apiDaycare._id || apiDaycare.id || resolvedParams.slug)
           );
           if (foundDaycare) {
             setDaycare(foundDaycare);
