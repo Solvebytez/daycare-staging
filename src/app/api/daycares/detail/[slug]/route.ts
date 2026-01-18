@@ -41,7 +41,7 @@ export async function GET(
           { 
             success: false, 
             error: 'Daycare not found',
-            message: `No daycare found with ID: ${id}`
+            message: `No daycare found with slug: ${slug}`
           },
           { status: 404 }
         );
