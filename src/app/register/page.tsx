@@ -129,6 +129,7 @@ export default function RegisterPage() {
     }
 
     // Prepare registration data but don't submit yet
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { confirmPassword: _confirmPassword, childAge, fullName, ...registerData } = formData;
 
     // Split fullName into firstName and lastName

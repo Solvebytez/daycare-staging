@@ -448,7 +448,7 @@ function SearchPageContent() {
       localStorage.setItem("searchRedirectUrl", url);
       const savedAgain = localStorage.getItem("searchRedirectUrl");
       return savedAgain === url;
-    } catch (error) {
+    } catch {
       // localStorage might be disabled or full
       return false;
     }
@@ -1057,7 +1057,7 @@ function SearchPageContent() {
         } else {
           throw new Error("Invalid data format received");
         }
-      } catch (err) {
+      } catch {
         return {
           success: true,
           data: [],

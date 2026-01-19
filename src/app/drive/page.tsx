@@ -3,7 +3,11 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Cloud, Database, FileText, Share2, Download, Upload } from 'lucide-react';
 import Link from 'next/link';
-import GoogleDriveIntegration from '../../components/GoogleDriveIntegration';
+import dynamic from 'next/dynamic';
+
+const GoogleDriveIntegration = dynamic(() => import('../../components/GoogleDriveIntegration'), {
+  ssr: false,
+});
 
 export default function DrivePage() {
   const features = [
