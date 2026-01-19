@@ -8,7 +8,6 @@ import axios, {
 export const getApiBaseUrl = () => {
   // Production URL - use subdomain if available, otherwise fallback to Render
   const PRODUCTION_API_URL = "https://api.kinderbridge.ca";
-  const FALLBACK_API_URL = "https://day-care-app-1.onrender.com";
 
   if (typeof window !== "undefined") {
     // Client-side: check if we're on production

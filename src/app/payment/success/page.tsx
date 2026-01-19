@@ -12,7 +12,7 @@ export default function PaymentSuccessPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [checkingPurchase, setCheckingPurchase] = useState(true);
-  const [_hasPurchased, setHasPurchased] = useState(false);
+  const [, setHasPurchased] = useState(false);
 
   // Get dashboard URL based on user type
   const getDashboardUrl = () => {

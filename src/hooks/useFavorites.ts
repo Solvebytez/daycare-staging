@@ -4,7 +4,6 @@ import {
   getFavorites,
   addFavorite,
   removeFavorite,
-  FavoriteResponse,
 } from "@/lib/favoritesService";
 
 /**

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Clock, Send, ArrowLeft } from "lucide-react";
+import { Mail, Clock, Send, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import Navigation from "@/components/Navigation";

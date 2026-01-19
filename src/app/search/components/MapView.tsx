@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Daycare } from "./SearchResults";
 import { formatDaycarePrice } from "../../../utils/priceFormatter";
 import { MapPin, Star, X } from "lucide-react";
-import type { GoogleMap, GoogleMarker, GoogleGeocoder, GoogleInfoWindow } from "@/types/google-maps";
+import type { GoogleMap, GoogleMarker, GoogleGeocoder } from "@/types/google-maps";
 
 interface MapViewProps {
   daycares: Daycare[];

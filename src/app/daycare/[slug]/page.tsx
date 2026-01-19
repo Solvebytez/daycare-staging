@@ -65,7 +65,6 @@ export default function DaycareDetailPage({
     removeFavorite: removeFavoriteAPI,
   } = useFavorites();
   const [daycare, setDaycare] = useState<Daycare | null>(null);
-  const [slug, setSlug] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,7 +81,6 @@ export default function DaycareDetailPage({
         setIsLoading(true);
         setError(null);
         const resolvedParams = await params;
-        setSlug(resolvedParams.slug);
 
         // Try to fetch from API first (v15.0.0 - supports slug)
         try {
@@ -125,7 +123,7 @@ export default function DaycareDetailPage({
           console.warn("API fetch failed, trying local data:", apiError);
           // Try to find by slug first, then by id (backward compatibility)
           const foundDaycare = daycaresData.find(
-            (d: any) => d.slug === resolvedParams.slug || d.id === resolvedParams.slug
+            (d: { slug?: string; id?: string }) => d.slug === resolvedParams.slug || d.id === resolvedParams.slug
           );
           if (foundDaycare) {
             setDaycare(foundDaycare);
@@ -160,7 +158,7 @@ export default function DaycareDetailPage({
       localStorage.setItem("searchRedirectUrl", url);
       const savedAgain = localStorage.getItem("searchRedirectUrl");
       return savedAgain === url;
-    } catch (error) {
+    } catch {
       // localStorage might be disabled or full
       return false;
     }

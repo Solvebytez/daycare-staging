@@ -5,7 +5,6 @@ import {
   createContactLog,
   updateContactLog,
   deleteContactLog,
-  ContactLogResponse,
   CreateContactLogRequest,
 } from "@/lib/contactLogsService";
 

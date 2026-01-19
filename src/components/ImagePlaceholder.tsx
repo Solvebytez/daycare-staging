@@ -18,7 +18,6 @@ export default function ImagePlaceholder({
   className = '',
   alt = 'Placeholder image'
 }: ImagePlaceholderProps) {
-  const [_imageError, _setImageError] = useState(false);
 
   const getPlaceholderContent = () => {
     switch (type) {

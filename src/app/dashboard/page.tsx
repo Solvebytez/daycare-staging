@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, LogOut, Home, Heart, Settings } from "lucide-react";
+import { Home, Heart, Settings } from "lucide-react";
 import Navigation from "../../components/Navigation";
 
 export default function DashboardPage() {
@@ -26,11 +26,6 @@ export default function DashboardPage() {
       // Employer, employee, and other roles stay on this generic dashboard
     }
   }, [user, isLoading, router]);
-
-  const handleLogout = () => {
-    logout();
-    router.push("/");
-  };
 
   if (isLoading) {
     return (

@@ -17,9 +17,6 @@ import {
   Lock,
   UserPlus,
   LogIn,
-  User,
-  LogOut,
-  LayoutDashboard,
   Mail,
 } from "lucide-react";
 import Link from "next/link";
