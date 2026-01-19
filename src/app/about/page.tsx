@@ -1,33 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users, Star, Heart, Phone, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import Link from "next/link";
-import ImagePlaceholder from "../../components/ImagePlaceholder";
 import Navigation from "../../components/Navigation";
 
 export default function AboutPage() {
-  const team = [
-    {
-      name: "Srinisha Chennamaneni",
-      role: "Co-Founder",
-      bio: "Healthcare professional with 10+ years of experience",
-      image: "/girl-1.jpeg",
-    },
-    {
-      name: "Abhishek Rao",
-      role: "Co-Founder and COO",
-      bio: "Operations expert specializing in scaling family-focused businesses and ensuring quality standards.",
-      image: "/abhishekroy.jpeg",
-    },
-    {
-      name: "Ashvak Sheik",
-      role: "Head of Product",
-      bio: "Product leader passionate about creating intuitive experiences that connect families with quality care.",
-      image: "/asvaik.jpeg",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navigation />

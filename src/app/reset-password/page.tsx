@@ -44,7 +44,7 @@ function ResetPasswordForm() {
         );
         setTokenValid(false);
       }
-    } catch (error) {
+    } catch {
       setError("Failed to validate reset token. Please try again.");
       setTokenValid(false);
     } finally {
@@ -80,7 +80,7 @@ function ResetPasswordForm() {
       } else {
         setError(result.error || "Failed to reset password. Please try again.");
       }
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);

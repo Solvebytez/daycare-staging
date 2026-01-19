@@ -7,7 +7,6 @@ import { ArrowLeft, Mail, CheckCircle, XCircle } from "lucide-react";
 import { verifyEmail, resendVerificationEmail } from "../../lib/authService";
 
 function VerifyEmailForm() {
-  const [token, setToken] = useState<string>("");
   const [isVerifying, setIsVerifying] = useState(true);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +27,6 @@ function VerifyEmailForm() {
     }
     
     if (tokenParam) {
-      setToken(tokenParam);
       verifyEmailToken(tokenParam);
     } else {
       setIsVerifying(false);
@@ -63,7 +61,7 @@ function VerifyEmailForm() {
           result.error || "Invalid or expired verification token. Please request a new verification email."
         );
       }
-    } catch (error) {
+    } catch {
       setError("Failed to verify email. Please try again.");
     } finally {
       setIsVerifying(false);
@@ -87,7 +85,7 @@ function VerifyEmailForm() {
       } else {
         setError(result.error || "Failed to resend verification email.");
       }
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setIsResending(false);
@@ -202,11 +200,11 @@ function VerifyEmailForm() {
               </h3>
               <div className="mt-2 text-sm text-yellow-700">
                 <p>
-                  Enter your email address below and we'll send you a new
+                  Enter your email address below and we&apos;ll send you a new
                   verification link.
                 </p>
                 <p className="mt-2">
-                  <strong>Tip:</strong> Don't forget to check your <strong>spam folder</strong> if you don't see the email in your inbox.
+                  <strong>Tip:</strong> Don&apos;t forget to check your <strong>spam folder</strong> if you don&apos;t see the email in your inbox.
                 </p>
               </div>
               <div className="mt-4">

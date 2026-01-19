@@ -5,14 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   MapPin,
-  Star,
-  Users,
-  Shield,
-  Clock,
   Mail,
   ArrowRight,
   CheckCircle,
-  User,
 } from "lucide-react";
 import Link from "next/link";
 import Navigation from "../components/Navigation";

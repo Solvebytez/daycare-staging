@@ -48,7 +48,7 @@ export default function LoginPage() {
             return;
           }
         }
-      } catch (error) {
+      } catch {
         // Silent fail
       }
       
@@ -85,7 +85,7 @@ export default function LoginPage() {
       // Return the pathname + search (relative path)
       const result = fullUrl.pathname + fullUrl.search;
       return result;
-    } catch (error) {
+    } catch {
       return null;
     }
   };

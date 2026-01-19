@@ -6,7 +6,6 @@ import { CheckCircle, Mail } from "lucide-react";
 import Link from "next/link";
 
 function RegisterSuccessContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState<string>("");
@@ -56,7 +55,7 @@ function RegisterSuccessContent() {
                 </h3>
                 <div className="text-sm text-blue-700 space-y-2">
                   <p>
-                    We've sent a verification email to{" "}
+                    We&apos;ve sent a verification email to{" "}
                     {email ? (
                       <strong className="font-semibold">{email}</strong>
                     ) : (
@@ -77,7 +76,7 @@ function RegisterSuccessContent() {
           {/* Important Notice */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <p className="text-yellow-800 text-sm">
-              <strong>Important:</strong> After verifying your email, you'll be able to log in to your account.
+              <strong>Important:</strong> After verifying your email, you&apos;ll be able to log in to your account.
             </p>
           </div>
 

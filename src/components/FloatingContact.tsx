@@ -37,7 +37,7 @@ export default function FloatingContact() {
       <AnimatePresence>
         {isExpanded && (
           <div className="mb-4 space-y-3">
-            {contactOptions.map((option, _index) => (
+            {contactOptions.map((option) => (
               <motion.div
                 key={option.label}
                 initial={{ opacity: 0, x: 20, scale: 0.8 }}

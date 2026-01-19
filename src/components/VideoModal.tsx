@@ -22,7 +22,6 @@ export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [_isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Shorter demo video URLs (around 1 minute each) - daycare/childcare focused
@@ -39,7 +38,7 @@ export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
   const fallbackVideo =
     "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
-  const [currentVideoIndex, _setCurrentVideoIndex] = useState(0);
+  const [currentVideoIndex] = useState(0);
   const [videoError, setVideoError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const videoUrl = videoError ? fallbackVideo : videoUrls[currentVideoIndex];

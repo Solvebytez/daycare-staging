@@ -3,11 +3,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin } from "lucide-react";
 
-interface AutocompleteOptions {
-  types?: string[];
-  componentRestrictions?: { country: string[] };
-  fields?: string[];
-}
 
 interface AutocompleteInstance {
   getPlace: () => PlaceResult;

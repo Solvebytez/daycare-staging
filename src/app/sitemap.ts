@@ -1,11 +1,5 @@
 import { MetadataRoute } from 'next';
 
-interface Daycare {
-  _id?: string;
-  id?: string;
-  name: string;
-  slug?: string;
-}
 
 // Get API base URL for server-side
 function getApiBaseUrl(): string {

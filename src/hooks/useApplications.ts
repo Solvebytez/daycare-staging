@@ -5,7 +5,6 @@ import {
   createApplication,
   updateApplicationStatus,
   deleteApplication,
-  ApplicationResponse,
   CreateApplicationRequest,
 } from "@/lib/applicationsService";
 

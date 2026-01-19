@@ -48,7 +48,7 @@ export default function RegisterPage() {
   const [pendingRegistrationData, setPendingRegistrationData] =
     useState<Record<string, unknown> | null>(null);
   const [isRegistering, setIsRegistering] = useState(false); // Track if registration is in progress
-  const { user, isLoading: authLoading, checkAuth } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const registerMutation = useRegisterMutation();
 
@@ -129,7 +129,7 @@ export default function RegisterPage() {
     }
 
     // Prepare registration data but don't submit yet
-    const { confirmPassword, childAge, fullName, ...registerData } = formData;
+    const { confirmPassword: _confirmPassword, childAge, fullName, ...registerData } = formData;
 
     // Split fullName into firstName and lastName
     const nameParts = fullName.trim().split(/\s+/);
