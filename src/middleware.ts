@@ -161,7 +161,7 @@ async function refreshTokenIfNeeded(
     if (userType && userEmail) {
       console.log("✅ Using cached token data for refresh");
       // Forward cookies from cache if available
-      const response = NextResponse.next();
+      NextResponse.next();
       // Note: We can't forward cookies from cache, so we'll refresh anyway
       // But we can skip if cache is very recent
       const cacheAge = now - (cachedData.expires - TOKEN_CACHE_MS);
@@ -533,7 +533,7 @@ export async function middleware(request: NextRequest) {
             try {
               controller = new AbortController();
               timeoutId = setTimeout(() => controller!.abort(), 3000); // 3 second timeout
-            } catch (e) {
+            } catch {
               // AbortController not available, continue without timeout
               console.log("⚠️ AbortController not available, proceeding without timeout");
             }

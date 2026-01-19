@@ -78,10 +78,8 @@ export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
     if (videoRef.current) {
       if (!document.fullscreenElement) {
         videoRef.current.requestFullscreen();
-        setIsFullscreen(true);
       } else {
         document.exitFullscreen();
-        setIsFullscreen(false);
       }
     }
   };

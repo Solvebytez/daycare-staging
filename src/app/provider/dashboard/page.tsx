@@ -11,10 +11,7 @@ import {
   Trash2,
   Check,
   X,
-  ArrowLeft,
   AlertTriangle,
-  LogOut,
-  ChevronDown,
   Heart,
   MapPin,
   Phone,
@@ -24,8 +21,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Navigation from '@/components/Navigation';
-import { api } from '@/lib/api';
-import daycaresLocalData from '@/data/daycares.json';
 import { formatDaycarePrice } from '@/utils/priceFormatter';
 import { useFavorites } from '@/hooks/useFavorites';
 
@@ -58,8 +53,8 @@ interface Daycare {
 }
 
 export default function ProviderDashboard() {
-  const { user, logout, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const {
     favorites: apiFavorites,
     isLoading: favoritesLoading,
@@ -67,7 +62,6 @@ export default function ProviderDashboard() {
   } = useFavorites();
   
   const [activeTab, setActiveTab] = useState('overview');
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [availability, setAvailability] = useState<TimeSlot[]>([]);
   const [showAddSlot, setShowAddSlot] = useState(false);
   const [newSlot, setNewSlot] = useState({

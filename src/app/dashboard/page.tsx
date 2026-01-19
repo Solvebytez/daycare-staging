@@ -8,7 +8,7 @@ import { Home, Heart, Settings } from "lucide-react";
 import Navigation from "../../components/Navigation";
 
 export default function DashboardPage() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {

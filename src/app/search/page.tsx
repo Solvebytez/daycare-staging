@@ -159,9 +159,6 @@ function SearchPageContent() {
     if (sortOrder !== "asc") currentParams.set("sortOrder", sortOrder);
     if (currentPage > 1) currentParams.set("page", currentPage.toString());
     
-    const currentUrlParams = currentParams.toString();
-    const urlParams = params.toString();
-    
     // Only sync if URL actually differs from current state (external navigation)
     // Compare parameter sets (order-independent)
     const currentParamsMap = new Map(currentParams.entries());
@@ -298,7 +295,7 @@ function SearchPageContent() {
             return; // Wait for URL to update before initializing
           }
         }
-      } catch (error) {
+      } catch {
         // Silent fail
       }
     }
@@ -429,7 +426,7 @@ function SearchPageContent() {
           // URL already has params, clear the saved one (redirect worked)
           localStorage.removeItem("searchRedirectUrl");
         }
-      } catch (error) {
+      } catch {
         // Silent fail
       }
     }, 500); // 500ms delay to let login redirect complete first
@@ -451,7 +448,7 @@ function SearchPageContent() {
       localStorage.setItem("searchRedirectUrl", url);
       const savedAgain = localStorage.getItem("searchRedirectUrl");
       return savedAgain === url;
-    } catch (error) {
+    } catch {
       // localStorage might be disabled or full
       return false;
     }
@@ -590,12 +587,6 @@ function SearchPageContent() {
     
     // Build the new URL
     const newUrl = params.toString() ? `/search?${params.toString()}` : "/search";
-    
-    // Get current URL path and search (only on client)
-    // Use searchParams to get current URL instead of window.location to avoid hydration issues
-    const currentUrlPath = searchParams.toString() 
-      ? `/search?${searchParams.toString()}` 
-      : "/search";
     
     // Only update URL if it's different from current URL
     // This prevents clearing URL params when filters are initialized from URL
@@ -898,7 +889,7 @@ function SearchPageContent() {
     : [];
 
   // Daycare types by region and city (dynamic)
-  const { data: typesResponse, isLoading: typesLoading } = useQuery({
+  const { data: typesResponse } = useQuery({
     queryKey: ["daycares", "types", selectedRegion, selectedWard],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -1013,7 +1004,7 @@ function SearchPageContent() {
         } else {
           throw new Error("Invalid data format received");
         }
-      } catch (err) {
+      } catch {
         // Fallback to local data if API fails
         // For fallback, we'll return a mock response structure
         const filtered = (daycaresLocalData as Daycare[]).slice(
@@ -1066,7 +1057,7 @@ function SearchPageContent() {
         } else {
           throw new Error("Invalid data format received");
         }
-      } catch (err) {
+      } catch {
         return {
           success: true,
           data: [],
@@ -1090,7 +1081,7 @@ function SearchPageContent() {
     const data = daycaresResponse?.data || [];
     // Transform API response: map _id to id (MongoDB returns _id, but frontend expects id)
     // v15.0.0 - include slug for SEO-friendly URLs
-    const transformedData = data.map((daycare: any) => ({
+    const transformedData = data.map((daycare: { _id?: string; id?: string; slug?: string }) => ({
       ...daycare,
       id: daycare._id || daycare.id || "",
       slug: daycare.slug || daycare._id || daycare.id || "", // v15.0.0 - Use slug if available, fallback to id
@@ -1179,7 +1170,7 @@ function SearchPageContent() {
     }
     const mapData = allDaycaresResponse?.data || [];
     // Transform API response: map _id to id (MongoDB returns _id, but frontend expects id)
-    const transformedMapData = mapData.map((daycare: any) => ({
+    const transformedMapData = mapData.map((daycare: { _id?: string; id?: string; slug?: string }) => ({
       ...daycare,
       id: daycare._id || daycare.id || "",
       slug: daycare.slug || daycare._id || daycare.id || "", // v15.0.0 - include slug
@@ -1272,7 +1263,8 @@ function SearchPageContent() {
   };
 
   const handleContactProvider = (daycare: Daycare) => {
-    // Implement contact functionality
+    setSelectedProvider(daycare);
+    setShowMessaging(true);
   };
 
   // Handle add contact log - check auth first
@@ -1302,11 +1294,11 @@ function SearchPageContent() {
     const currentSearchUrl = window.location.pathname + window.location.search;
     try {
       sessionStorage.setItem("lastSearchUrl", currentSearchUrl);
-    } catch (error) {
+    } catch {
       // Silent fail - will rely on browser history
     }
     // Use Next.js router to preserve browser history (v15.0.0 - use slug for SEO)
-    const slug = (daycare as any).slug || daycare.id;
+    const slug = (daycare as { slug?: string; id: string }).slug || daycare.id;
     router.push(`/daycare/${slug}`);
   };
 

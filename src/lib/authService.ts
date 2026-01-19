@@ -15,12 +15,12 @@ export async function requestPasswordReset(email: string): Promise<{
       email,
     });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Password reset request error:", error);
     return {
       success: false,
       error:
-        error.response?.data?.error ||
+        (error as { response?: { data?: { error?: string } } }).response?.data?.error ||
         "Failed to send password reset email. Please try again.",
     };
   }
@@ -39,12 +39,12 @@ export async function verifyResetToken(token: string): Promise<{
   try {
     const response = await apiClient.get(`/api/auth/reset-password/${token}`);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Token verification error:", error);
     return {
       success: false,
       error:
-        error.response?.data?.error ||
+        (error as { response?: { data?: { error?: string } } }).response?.data?.error ||
         "Invalid or expired reset token",
     };
   }
@@ -70,12 +70,12 @@ export async function resetPassword(
       password,
     });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Password reset error:", error);
     return {
       success: false,
       error:
-        error.response?.data?.error ||
+        (error as { response?: { data?: { error?: string } } }).response?.data?.error ||
         "Failed to reset password. Please try again.",
     };
   }
@@ -95,12 +95,12 @@ export async function verifyEmail(token: string): Promise<{
   try {
     const response = await apiClient.get(`/api/auth/verify-email/${token}`);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Email verification error:", error);
     return {
       success: false,
       error:
-        error.response?.data?.error ||
+        (error as { response?: { data?: { error?: string } } }).response?.data?.error ||
         "Invalid or expired verification token",
     };
   }
@@ -121,12 +121,12 @@ export async function resendVerificationEmail(email: string): Promise<{
       email,
     });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Resend verification error:", error);
     return {
       success: false,
       error:
-        error.response?.data?.error ||
+        (error as { response?: { data?: { error?: string } } }).response?.data?.error ||
         "Failed to send verification email. Please try again.",
     };
   }
