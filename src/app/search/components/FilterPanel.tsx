@@ -736,9 +736,9 @@ export default function FilterPanel({
                     ) {
                       localStorage.setItem("searchRedirectUrl", currentUrl);
                     }
-                  } catch (error) {
-                    // localStorage might be disabled - redirect parameter will still work
-                  }
+                    } catch {
+                      // localStorage might be disabled - redirect parameter will still work
+                    }
                   // Redirect immediately - localStorage.setItem is synchronous
                   window.location.href = `/login?redirect=${encodeURIComponent(
                     currentUrl

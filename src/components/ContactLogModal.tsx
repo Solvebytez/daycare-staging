@@ -253,7 +253,9 @@ export default function ContactLogModal({
   });
 
   // Get selected daycare from search results or from individual fetch
-  const selectedDaycare = useMemo(() => {
+  // Note: This is computed but currently unused, kept for potential future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _selectedDaycare = useMemo(() => {
     if (!formData.daycareId) return null;
     // First check if it's in the current search results
     const found = daycares.find((d) => (d._id || d.id) === formData.daycareId);

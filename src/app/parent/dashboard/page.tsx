@@ -16,13 +16,8 @@ import toast, { Toaster } from "react-hot-toast";
 import {
   MagnifyingGlassIcon,
   DocumentTextIcon,
-  UserIcon,
-  BellIcon,
-  CogIcon,
   EllipsisVerticalIcon,
   ExclamationTriangleIcon,
-  ArrowRightOnRectangleIcon,
-  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 
 interface SavedSearch {
@@ -47,8 +42,7 @@ interface Application {
 }
 
 export default function ParentDashboard() {
-  const { user, logout, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const {
     favorites,
     isLoading: favoritesLoading,
@@ -61,7 +55,6 @@ export default function ParentDashboard() {
     contactLogs,
     isLoading: contactLogsLoading,
     error: contactLogsError,
-    updateContactLog,
     deleteContactLog,
     isDeletingContactLog,
   } = useContactLogs();
@@ -73,7 +66,6 @@ export default function ParentDashboard() {
   } = useApplications();
 
   const [activeTab, setActiveTab] = useState("favorites");
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [selectedContactLog, setSelectedContactLog] = useState<ContactLogResponse | null>(null);
   const [isContactLogModalOpen, setIsContactLogModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -508,7 +500,7 @@ export default function ParentDashboard() {
                   !favoritesError &&
                   savedSearches.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                      {savedSearches.map((search, index) => {
+                      {savedSearches.map((search) => {
                         // Get the corresponding favorite object to access daycareId
                         const favorite = favorites.find(
                           (fav) =>

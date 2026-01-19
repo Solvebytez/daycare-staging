@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { ImageIcon, Building2, Users } from 'lucide-react';
 
 interface ImagePlaceholderProps {

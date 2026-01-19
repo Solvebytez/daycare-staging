@@ -554,7 +554,7 @@ export default function SearchResults({
                         if (localStorage.getItem("searchRedirectUrl") !== currentUrl) {
                           localStorage.setItem("searchRedirectUrl", currentUrl);
                         }
-                      } catch (error) {
+                      } catch {
                         // localStorage might be disabled - redirect parameter will still work
                       }
                       // Redirect immediately - localStorage.setItem is synchronous

@@ -125,7 +125,7 @@ export default function LoginPage() {
             // Clear localStorage backup since we're using redirect param
             try {
               localStorage.removeItem("searchRedirectUrl");
-            } catch (error) {
+            } catch {
               // Silent fail
             }
           }
@@ -144,7 +144,7 @@ export default function LoginPage() {
                 localStorage.removeItem("searchRedirectUrl");
               }
             }
-          } catch (error) {
+          } catch {
             // Silent fail
           }
         }
@@ -163,7 +163,7 @@ export default function LoginPage() {
         if (redirectUrl && redirectUrl !== "/search") {
           try {
             localStorage.removeItem("searchRedirectUrl");
-          } catch (error) {
+          } catch {
             // Silent fail
           }
         }
