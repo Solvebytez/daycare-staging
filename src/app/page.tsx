@@ -174,8 +174,8 @@ export default function HomePage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative" style={{ overflow: 'visible' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <section className="relative py-10" style={{ overflow: 'visible' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -203,7 +203,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="max-w-4xl mx-auto mb-16"
+              className="max-w-4xl mx-auto"
               style={{ overflow: 'visible' }}
             >
               <form
