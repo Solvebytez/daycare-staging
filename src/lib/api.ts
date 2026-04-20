@@ -29,7 +29,8 @@ export const getApiBaseUrl = () => {
     return PRODUCTION_API_URL;
   }
 
-  return "http://localhost:5001"; // Server-side development fallback
+  // Server-side development: prefer env override (supports localhost frontend -> prod backend)
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 };
 
 // Create axios instance
@@ -126,7 +127,7 @@ apiClient.interceptors.response.use(
       try {
         // Try to refresh the access token
         const refreshResponse = await axios.post(
-          `${apiBaseUrl}/api/auth/refresh`,
+          `${getApiBaseUrl()}/api/auth/refresh`,
           {},
           { withCredentials: true }
         );

@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useCallback,
+  useRef,
+  Suspense,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, ArrowRight } from "lucide-react";
+import { Toaster } from "react-hot-toast";
 import Link from "next/link";
 import { apiClient } from "../../lib/api";
 import MessagingSystem from "../../components/MessagingSystem";
@@ -18,6 +27,15 @@ import FilterPanel from "./components/FilterPanel";
 import SearchResults from "./components/SearchResults";
 import ComparisonModal from "./components/ComparisonModal";
 import ContactLogModal from "../../components/ContactLogModal";
+import {
+  saveAutoApplyPending,
+  readAutoApplyPending,
+  clearAutoApplyPending,
+  returnUrlsMatch,
+  saveSearchSelection,
+  readSearchSelection,
+  clearSearchSelection,
+} from "../../lib/autoApplyPending";
 
 interface Daycare {
   id: string;
@@ -69,6 +87,10 @@ function SearchPageContent() {
     null
   ); // Track which favorite is loading
   const [compareList, setCompareList] = useState<string[]>([]);
+  const [autoApplySelectedIds, setAutoApplySelectedIds] = useState<string[]>(
+    []
+  );
+  const autoApplyHydratedRef = useRef(false);
   const [showComparison, setShowComparison] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasPurchasedReport] = useState(false);
@@ -433,6 +455,48 @@ function SearchPageContent() {
     
     return () => clearTimeout(timeoutId);
   }, [user, authLoading, searchParams, router]);
+
+  // Hydrate auto-apply selection: post-login pending first, else sessionStorage for refresh
+  useLayoutEffect(() => {
+    if (!filtersInitialized || typeof window === "undefined") return;
+    const current = window.location.pathname + window.location.search;
+
+    const pending = readAutoApplyPending();
+    if (pending && returnUrlsMatch(pending.returnUrl, current)) {
+      setAutoApplySelectedIds(pending.selectedDaycareIds);
+      window.setTimeout(() => clearAutoApplyPending(), 400);
+      autoApplyHydratedRef.current = true;
+      return;
+    }
+
+    const stored = readSearchSelection();
+    if (stored && returnUrlsMatch(stored.returnUrl, current)) {
+      if (stored.selectedDaycareIds.length > 0) {
+        setAutoApplySelectedIds(stored.selectedDaycareIds);
+      }
+    } else if (stored && !returnUrlsMatch(stored.returnUrl, current)) {
+      clearSearchSelection();
+      setAutoApplySelectedIds([]);
+    }
+
+    autoApplyHydratedRef.current = true;
+  }, [filtersInitialized, searchParams]);
+
+  // Persist selection across refresh (cleared when URL/filters no longer match or list empty)
+  useEffect(() => {
+    if (!filtersInitialized || typeof window === "undefined") return;
+    if (!autoApplyHydratedRef.current) return;
+
+    const returnUrl = window.location.pathname + window.location.search;
+    if (autoApplySelectedIds.length === 0) {
+      clearSearchSelection();
+      return;
+    }
+    saveSearchSelection({
+      returnUrl,
+      selectedDaycareIds: autoApplySelectedIds,
+    });
+  }, [autoApplySelectedIds, filtersInitialized]);
 
   // Helper function to save URL to localStorage reliably
   const saveRedirectUrl = useCallback((url: string): boolean => {
@@ -1251,6 +1315,12 @@ function SearchPageContent() {
     setCompareList(newCompareList);
   };
 
+  const toggleAutoApplySelect = useCallback((id: string) => {
+    setAutoApplySelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }, []);
+
   const clearComparison = () => {
     setCompareList([]);
     setShowComparison(false);
@@ -1281,6 +1351,34 @@ function SearchPageContent() {
     // Logged in user - open modal
     setShowContactLogModal(true);
   }, [user, authLoading, saveRedirectUrl]);
+
+  const handleAutoApplyClick = useCallback(() => {
+    if (autoApplySelectedIds.length === 0) return;
+    if (authLoading) return;
+    const returnUrl =
+      typeof window !== "undefined"
+        ? window.location.pathname + window.location.search
+        : "/search";
+
+    if (user) {
+      const selectedIdsParam = encodeURIComponent(autoApplySelectedIds.join(","));
+      router.push(`/parent-details?selectedIds=${selectedIdsParam}`);
+      return;
+    }
+
+    saveAutoApplyPending({
+      returnUrl,
+      selectedDaycareIds: autoApplySelectedIds,
+    });
+    saveRedirectUrl(returnUrl);
+    router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
+  }, [
+    autoApplySelectedIds,
+    user,
+    authLoading,
+    router,
+    saveRedirectUrl,
+  ]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleMessageProvider = (daycare: Daycare) => {
@@ -1453,14 +1551,39 @@ function SearchPageContent() {
 
           {/* Floating Compare Button */}
           {compareList.length > 0 && (
-            <div className="fixed bottom-6 right-6 z-40">
+            <div
+              className={`fixed right-6 z-40 transition-[bottom] duration-300 ${
+                autoApplySelectedIds.length > 0 ? "bottom-28" : "bottom-6"
+              }`}
+            >
               <button
+                type="button"
                 onClick={() => setShowComparison(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg transition-colors flex items-center space-x-2"
               >
                 <Filter className="h-5 w-5" />
                 <span>Compare ({compareList.length})</span>
               </button>
+            </div>
+          )}
+
+          {autoApplySelectedIds.length > 0 && (
+            <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-6 pt-2">
+              <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-gray-200/80 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
+                <p className="text-center text-sm font-medium text-gray-800 sm:text-left">
+                  {autoApplySelectedIds.length} selected
+                </p>
+                <button
+                  type="button"
+                  onClick={handleAutoApplyClick}
+                  disabled={authLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5"
+                >
+                  Auto-Apply to {autoApplySelectedIds.length}{" "}
+                  {autoApplySelectedIds.length === 1 ? "Daycare" : "Daycares"}
+                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+                </button>
+              </div>
             </div>
           )}
 
@@ -1529,6 +1652,8 @@ function SearchPageContent() {
               onPageChange={goToPage}
               onPreviousPage={goToPreviousPage}
               onNextPage={goToNextPage}
+              autoApplySelectedIds={autoApplySelectedIds}
+              onToggleAutoApplySelect={toggleAutoApplySelect}
             />
           </div>
         </div>
@@ -1567,6 +1692,8 @@ function SearchPageContent() {
         isOpen={showContactLogModal}
         onClose={() => setShowContactLogModal(false)}
       />
+
+      <Toaster position="top-center" toastOptions={{ duration: 4500 }} />
     </>
   );
 }

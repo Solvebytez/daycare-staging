@@ -252,10 +252,34 @@ export async function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get("refreshToken")?.value;
   const accessToken = request.cookies.get("accessToken")?.value;
 
+  /**
+   * Localhost dev against a remote API:
+   * - Auth cookies are stored on the API domain (e.g. onrender.com / api.kinderbridge.ca)
+   * - Next.js middleware runs on the frontend domain (localhost) and cannot read API-domain cookies
+   * Result: infinite redirect loop to /login even though API requests are authenticated.
+   *
+   * So when on localhost and NEXT_PUBLIC_API_URL points to a non-localhost HTTPS API,
+   * we skip route protection in middleware and let client-side auth handle it.
+   */
+  const host = request.nextUrl.hostname;
+  const apiUrlForMiddleware = getApiBaseUrl();
+  const isLocalhostFrontend =
+    host === "localhost" || host === "127.0.0.1" || host === "::1";
+  const isRemoteHttpsApi =
+    apiUrlForMiddleware.startsWith("https://") &&
+    !apiUrlForMiddleware.includes("localhost") &&
+    !apiUrlForMiddleware.includes("127.0.0.1");
+  const skipMiddlewareAuthForRemoteApi = isLocalhostFrontend && isRemoteHttpsApi;
+
   console.log("🔍 Middleware Debug:");
   console.log("  pathname:", pathname);
   console.log("  accessToken:", accessToken ? "✅ Present" : "❌ Missing");
   console.log("  refreshToken:", refreshToken ? "✅ Present" : "❌ Missing");
+  if (skipMiddlewareAuthForRemoteApi) {
+    console.log(
+      "🧪 Localhost + remote API detected: skipping middleware auth redirects"
+    );
+  }
 
   // Proactively refresh token if refreshToken exists but accessToken is missing
   // This ensures accessToken is always available when refreshToken is valid
@@ -271,6 +295,10 @@ export async function middleware(request: NextRequest) {
   // 1. Handle protected routes
   if (protectedRoutes.some((route) => pathname.startsWith(route))) {
     console.log("🛡️ Protected route detected, checking authentication...");
+
+    if (skipMiddlewareAuthForRemoteApi) {
+      return NextResponse.next();
+    }
 
     if (!refreshToken) {
       console.log("❌ No refresh token found, redirecting to login");

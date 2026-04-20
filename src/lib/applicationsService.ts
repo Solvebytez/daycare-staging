@@ -19,6 +19,11 @@ export interface ApplicationResponse {
   parentEmail: string;
   parentPhone?: string;
   additionalNotes?: string;
+  source?: "manual" | "auto_apply";
+  childName?: string;
+  childDob?: string;
+  preferredStartDate?: string;
+  specialNotes?: string;
   createdAt: string;
   updatedAt: string;
   daycare?: {
@@ -45,6 +50,23 @@ export interface CreateApplicationRequest {
   parentEmail: string;
   parentPhone?: string;
   additionalNotes?: string;
+}
+
+export interface AutoApplyCreditsResponse {
+  totalCredits: number;
+  usedCredits: number;
+  remainingCredits: number;
+}
+
+export interface SubmitAutoApplyRequest {
+  daycareIds: string[];
+  parentName: string;
+  parentEmail: string;
+  parentPhone: string;
+  childName: string;
+  childDob: string;
+  preferredStartDate: string;
+  specialNotes?: string;
 }
 
 export interface ApplicationsApiResponse {
@@ -132,5 +154,64 @@ export const deleteApplication = async (
     data: { deleted: boolean; id: string };
     message?: string;
   }>(`/api/applications/${applicationId}`);
+  return response.data;
+};
+
+export const getAutoApplyCredits = async (): Promise<{
+  success: boolean;
+  data: AutoApplyCreditsResponse;
+}> => {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: AutoApplyCreditsResponse;
+  }>("/api/applications/credits");
+  return response.data;
+};
+
+export const grantAutoApplyCredits = async (payload: {
+  credits?: number;
+  paymentReference?: string;
+  note?: string;
+}): Promise<{
+  success: boolean;
+  data: AutoApplyCreditsResponse & { grantedCredits: number };
+  message?: string;
+}> => {
+  const response = await apiClient.post<{
+    success: boolean;
+    data: AutoApplyCreditsResponse & { grantedCredits: number };
+    message?: string;
+  }>("/api/applications/credits/grant", payload);
+  return response.data;
+};
+
+export const submitAutoApplyApplications = async (
+  payload: SubmitAutoApplyRequest
+): Promise<{
+  success: boolean;
+  data: {
+    createdCount: number;
+    skippedCount: number;
+    createdIds: string[];
+    skippedDaycareIds: string[];
+    credits: AutoApplyCreditsResponse | null;
+  };
+  message?: string;
+  error?: string;
+  details?: Array<{ remainingCredits?: number; creditsNeeded?: number }>;
+}> => {
+  const response = await apiClient.post<{
+    success: boolean;
+    data: {
+      createdCount: number;
+      skippedCount: number;
+      createdIds: string[];
+      skippedDaycareIds: string[];
+      credits: AutoApplyCreditsResponse | null;
+    };
+    message?: string;
+    error?: string;
+    details?: Array<{ remainingCredits?: number; creditsNeeded?: number }>;
+  }>("/api/applications/auto-apply", payload);
   return response.data;
 };

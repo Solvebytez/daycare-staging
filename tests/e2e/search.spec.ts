@@ -69,11 +69,11 @@ test.describe('Search Page', () => {
   })
 
   test('should display cost calculator', async ({ page }) => {
-    // Check if cost breakdown is shown
     await expect(page.getByText('Cost Breakdown')).toBeVisible()
+    await page.getByRole('button', { name: 'Cost Breakdown' }).first().click()
     await expect(page.getByText('Monthly Tuition:')).toBeVisible()
     await expect(page.getByText('Registration Fee:')).toBeVisible()
-    await expect(page.getByText('Annual Cost:')).toBeVisible()
+    await expect(page.getByText('Late Pickup:')).toBeVisible()
   })
 
   test('should handle empty search results', async ({ page }) => {

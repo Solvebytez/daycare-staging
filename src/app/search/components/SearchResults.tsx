@@ -1,7 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, MapPin, Star, Lock, UserPlus, List, Map } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Star,
+  Lock,
+  UserPlus,
+  List,
+  Map,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import MapView from "./MapView";
@@ -53,6 +63,8 @@ interface SearchResultsProps {
   onPageChange: (page: number) => void;
   onPreviousPage: () => void;
   onNextPage: () => void;
+  autoApplySelectedIds: string[];
+  onToggleAutoApplySelect: (id: string) => void;
 }
 
 export default function SearchResults({
@@ -76,8 +88,13 @@ export default function SearchResults({
   onPageChange,
   onPreviousPage,
   onNextPage,
+  autoApplySelectedIds,
+  onToggleAutoApplySelect,
 }: SearchResultsProps) {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [costBreakdownOpenById, setCostBreakdownOpenById] = useState<
+    Record<string, boolean>
+  >({});
 
   // Use all daycares for map view if available, otherwise use displayed daycares
   const mapDaycares = allDaycaresForMap || displayedDaycares;
@@ -256,13 +273,38 @@ export default function SearchResults({
                 )}
 
                 {displayedDaycares.map((daycare) => {
+                  const isCostOpen =
+                    costBreakdownOpenById[daycare.id] ?? false;
                   return (
                   <motion.div
                     key={daycare.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+                    onClick={(e) => {
+                      const t = e.target as HTMLElement;
+                      if (
+                        t.closest(
+                          "button, a, input, label, textarea, select, [data-skip-card-select]"
+                        )
+                      ) {
+                        return;
+                      }
+                      onToggleAutoApplySelect(daycare.id);
+                    }}
+                    className={`relative cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group ${
+                      autoApplySelectedIds.includes(daycare.id)
+                        ? "ring-2 ring-red-500 ring-offset-2 ring-offset-white/80"
+                        : ""
+                    }`}
                   >
+                    {autoApplySelectedIds.includes(daycare.id) && (
+                      <div
+                        className="absolute left-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white shadow-md"
+                        aria-hidden
+                      >
+                        <Check className="h-4 w-4" strokeWidth={3} />
+                      </div>
+                    )}
                     <div className="p-6">
                       <div className="flex flex-col lg:flex-row gap-6">
                         {/* Image Placeholder */}
@@ -299,7 +341,11 @@ export default function SearchResults({
                               </div>
                             </div>
                             <div className="flex items-center space-x-3">
-                              <label className="flex items-center space-x-2 cursor-pointer">
+                              <label
+                                className="flex items-center space-x-2 cursor-pointer"
+                                data-skip-card-select
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <input
                                   type="checkbox"
                                   checked={compareList.includes(daycare.id)}
@@ -350,51 +396,101 @@ export default function SearchResults({
                               </div>
                             )}
 
-                          {/* Cost Breakdown */}
+                          {/* Cost Breakdown (collapsible) */}
                           <div className="bg-gray-100 rounded-lg p-3">
-                            <h4 className="font-bold text-gray-900 mb-3 text-sm">
-                              Cost Breakdown
-                            </h4>
-                            <div className="space-y-1.5">
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-700 font-medium text-xs">
-                                  Monthly Tuition:
-                                </span>
-                                <span className="font-bold text-gray-900 text-xs">
-                                  {formatDaycarePrice(daycare.price, daycare.priceString)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-700 font-medium text-xs">
-                                  Registration Fee:
-                                </span>
-                                <span className="font-bold text-gray-900 text-xs">
-                                  $100 (one-time)
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-700 font-medium text-xs">
-                                  Late Pickup:
-                                </span>
-                                <span className="font-bold text-gray-900 text-xs">
-                                  $15/hour
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-700 font-medium text-xs">
-                                  Subsidy Available:
-                                </span>
-                                <span className="font-bold text-gray-900 text-xs">
-                                  {daycare.subsidy}
-                                </span>
-                              </div>
-                            </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCostBreakdownOpenById((prev) => ({
+                                        ...prev,
+                                        [daycare.id]: !(
+                                          prev[daycare.id] ?? false
+                                        ),
+                                      }));
+                                    }}
+                                    className="flex w-full items-center justify-between gap-2 text-left rounded-md py-0.5 -mx-0.5 px-0.5 hover:bg-gray-200/80 transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+                                    aria-expanded={isCostOpen}
+                                    aria-controls={`cost-breakdown-${daycare.id}`}
+                                    id={`cost-breakdown-trigger-${daycare.id}`}
+                                  >
+                                    <h4 className="font-bold text-gray-900 text-sm">
+                                      Cost Breakdown
+                                    </h4>
+                                    <ChevronDown
+                                      className={`h-4 w-4 shrink-0 text-gray-600 transition-transform duration-700 ease-out ${
+                                        isCostOpen ? "rotate-180" : ""
+                                      }`}
+                                      aria-hidden
+                                    />
+                                  </button>
+                                  <motion.div
+                                    id={`cost-breakdown-${daycare.id}`}
+                                    role="region"
+                                    aria-labelledby={`cost-breakdown-trigger-${daycare.id}`}
+                                    initial={false}
+                                    animate={{
+                                      height: isCostOpen ? "auto" : 0,
+                                      opacity: isCostOpen ? 1 : 0,
+                                    }}
+                                    transition={{
+                                      height: {
+                                        duration: 0.75,
+                                        ease: [0.22, 1, 0.36, 1],
+                                      },
+                                      opacity: {
+                                        duration: 0.55,
+                                        ease: "easeInOut",
+                                      },
+                                    }}
+                                    style={{ overflow: "hidden" }}
+                                  >
+                                    <div className="space-y-1.5 pt-3">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-gray-700 font-medium text-xs">
+                                          Monthly Tuition:
+                                        </span>
+                                        <span className="font-bold text-gray-900 text-xs">
+                                          {formatDaycarePrice(
+                                            daycare.price,
+                                            daycare.priceString
+                                          )}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-gray-700 font-medium text-xs">
+                                          Registration Fee:
+                                        </span>
+                                        <span className="font-bold text-gray-900 text-xs">
+                                          $100 (one-time)
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-gray-700 font-medium text-xs">
+                                          Late Pickup:
+                                        </span>
+                                        <span className="font-bold text-gray-900 text-xs">
+                                          $15/hour
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-gray-700 font-medium text-xs">
+                                          Subsidy Available:
+                                        </span>
+                                        <span className="font-bold text-gray-900 text-xs">
+                                          {daycare.subsidy}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </motion.div>
                           </div>
 
                           {/* Action Buttons */}
                           <div className="flex flex-col sm:flex-row gap-3 pt-3">
                             <button
-                              onClick={() => {
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 onViewDetails(daycare);
                                 onAddToRecentlyViewed(daycare);
                               }}
@@ -403,7 +499,11 @@ export default function SearchResults({
                               View Details
                             </button>
                             <button
-                              onClick={() => onToggleFavorite(daycare.id)}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleFavorite(daycare.id);
+                              }}
                               disabled={favoriteLoadingId === daycare.id}
                               className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                                 favorites.includes(daycare.id)

@@ -97,40 +97,15 @@ export default function HomePage() {
   console.log("🏠 [HOME PAGE] All regions count:", allRegions.length);
   console.log("🏠 [HOME PAGE] Filtered regions count:", regions.length);
 
-  const handleSearch = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-
-      // Reset errors
-      const newErrors: { location?: string } = {};
-
-      // Validate: location must be filled
-      const hasLocation = location.trim().length > 0;
-
-      if (!hasLocation) {
-        newErrors.location = "Please select a location";
-        setErrors(newErrors);
-        return;
-      }
-
-      // Validate location: must be from the dropdown (valid region)
-      if (hasLocation && !allRegions.includes(location.trim())) {
-        newErrors.location = "Please select a valid location from the dropdown";
-        setErrors(newErrors);
-        return;
-      }
-
-      // Clear errors if validation passes
-      setErrors({});
-
-      // Navigate to search page with query parameters
-      const params = new URLSearchParams();
-      if (hasLocation) params.append("location", location.trim());
-
-      window.location.href = `/search?${params.toString()}`;
-    },
-    [location, allRegions]
-  );
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    const params = new URLSearchParams();
+    const trimmed = location.trim();
+    if (trimmed) params.append("location", trimmed);
+    const q = params.toString();
+    window.location.href = q ? `/search?${q}` : "/search";
+  }, [location]);
 
   const selectRegion = useCallback(
     (region: string) => {

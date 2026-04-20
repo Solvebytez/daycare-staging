@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
+import { getAutoApplyCredits } from "../lib/applicationsService";
 import {
   Bars3Icon,
   XMarkIcon,
@@ -19,6 +20,8 @@ import {
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [creditsUsed, setCreditsUsed] = useState<number | null>(null);
+  const [creditsTotal, setCreditsTotal] = useState<number | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -69,6 +72,60 @@ export default function Navigation() {
     }
   }, [isUserDropdownOpen]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadCredits = async () => {
+      if (!user || user.userType !== "parent") {
+        setCreditsUsed(null);
+        setCreditsTotal(null);
+        return;
+      }
+      try {
+        const response = await getAutoApplyCredits();
+        if (!mounted) return;
+        const total = Number(response.data.totalCredits);
+        const used = Number(response.data.usedCredits);
+        const remaining = Number(response.data.remainingCredits);
+
+        // Hide badge when user has not purchased any credits yet.
+        if (!Number.isFinite(total) || total <= 0) {
+          setCreditsTotal(null);
+          setCreditsUsed(null);
+          return;
+        }
+
+        // Display as x/30 (pack size), even if backend returns unexpected totals.
+        const PACK = 30;
+        const normalizedUsed = Number.isFinite(used)
+          ? Math.min(PACK, Math.max(0, used))
+          : null;
+        const normalizedRemaining = Number.isFinite(remaining)
+          ? Math.min(PACK, Math.max(0, remaining))
+          : null;
+
+        setCreditsTotal(PACK);
+        if (normalizedUsed !== null) {
+          setCreditsUsed(normalizedUsed);
+        } else if (normalizedRemaining !== null) {
+          setCreditsUsed(PACK - normalizedRemaining);
+        } else {
+          setCreditsUsed(0);
+        }
+      } catch {
+        if (!mounted) return;
+        setCreditsUsed(null);
+        setCreditsTotal(null);
+      }
+    };
+
+    loadCredits();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?._id, user?.userType]);
+
   const handleDashboardClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsUserDropdownOpen(false);
@@ -116,58 +173,65 @@ export default function Navigation() {
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors max-w-48"
-                >
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <UserIcon className="h-4 w-4 text-blue-600" />
+              <div className="flex items-center space-x-3">
+                {user.userType === "parent" && creditsTotal !== null && (
+                  <div className="rounded-full bg-[#F3E7E1] px-3 py-1 text-xs font-semibold text-[#F26A3D]">
+                    {creditsUsed ?? 0}/{creditsTotal}
                   </div>
-                  <span className="truncate">
-                    {user.firstName || user.email}
-                  </span>
-                  <ChevronDownIcon
-                    className={`h-4 w-4 transition-transform flex-shrink-0 ${
-                      isUserDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {isUserDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                  >
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {user.firstName} {user.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {user.email}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleDashboardClick}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
-                    >
-                      <UserIcon className="h-4 w-4" />
-                      <span>Dashboard</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setIsUserDropdownOpen(false);
-                      }}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
-                    >
-                      <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                      <span>Sign Out</span>
-                    </button>
-                  </motion.div>
                 )}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors max-w-48"
+                  >
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <UserIcon className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <span className="truncate">
+                      {user.firstName || user.email}
+                    </span>
+                    <ChevronDownIcon
+                      className={`h-4 w-4 transition-transform flex-shrink-0 ${
+                        isUserDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isUserDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                    >
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {user.firstName} {user.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleDashboardClick}
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
+                      >
+                        <UserIcon className="h-4 w-4" />
+                        <span>Dashboard</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsUserDropdownOpen(false);
+                        }}
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
+                      >
+                        <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
               </div>
             ) : (
               <>
@@ -242,6 +306,11 @@ export default function Navigation() {
                     <p className="text-xs text-gray-500 truncate">
                       {user.email}
                     </p>
+                    {user.userType === "parent" && creditsTotal !== null && (
+                      <p className="mt-2 inline-block rounded-full bg-[#F3E7E1] px-2 py-0.5 text-[11px] font-semibold text-[#F26A3D]">
+                        Credits used: {creditsUsed ?? 0}/{creditsTotal}
+                      </p>
+                    )}
                   </div>
                   <button
                     onClick={(e) => {
