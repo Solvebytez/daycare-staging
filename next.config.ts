@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 import { readEnvVarFromDisk, readPublishableKeyFromDisk } from "./next-env-stripe";
 
-const stripePublishableKey = readPublishableKeyFromDisk();
+const stripePublishableKey =
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() ||
+  process.env.STRIPE_PUBLISHABLE_KEY?.trim() ||
+  readPublishableKeyFromDisk();
 const apiUrl = readEnvVarFromDisk("NEXT_PUBLIC_API_URL");
 
 const nextConfig: NextConfig = {

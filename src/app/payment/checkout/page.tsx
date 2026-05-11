@@ -506,11 +506,20 @@ export default function PaymentCheckoutPage() {
       <main className="px-4 py-10">
         {missingPublishableKey && (
           <div className="mx-auto mb-5 max-w-xl rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            Missing Stripe publishable key for this build. Add{" "}
-            <code className="rounded bg-red-100 px-1">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> to{" "}
-            <code className="rounded bg-red-100 px-1">frontend/.env.local</code> (or{" "}
-            <code className="rounded bg-red-100 px-1">.env</code>), then restart{" "}
-            <code className="rounded bg-red-100 px-1">npm run dev</code>.
+            <p className="font-medium text-red-800">Missing Stripe publishable key</p>
+            <p className="mt-2">
+              <strong>On Vercel:</strong> Project → Settings → Environment Variables → add{" "}
+              <code className="rounded bg-red-100 px-1">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>{" "}
+              (or <code className="rounded bg-red-100 px-1">STRIPE_PUBLISHABLE_KEY</code>) for{" "}
+              <em>Preview</em> and <em>Production</em>, then redeploy. Vercel does not read your laptop{" "}
+              <code className="rounded bg-red-100 px-1">.env</code> file.
+            </p>
+            <p className="mt-2">
+              <strong>Locally:</strong> put the same variable in{" "}
+              <code className="rounded bg-red-100 px-1">frontend-staging/.env.local</code> or{" "}
+              <code className="rounded bg-red-100 px-1">frontend-staging/.env</code> and restart{" "}
+              <code className="rounded bg-red-100 px-1">npm run dev</code>.
+            </p>
           </div>
         )}
 
