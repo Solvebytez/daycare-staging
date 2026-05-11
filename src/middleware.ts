@@ -56,24 +56,17 @@ const protectedRoutes = [
 const authRoutes = ["/login", "/register"];
 
 /**
- * Get API base URL
+ * Same backend as the browser (api.ts). Vercel is always NODE_ENV=production;
+ * we must not force api.kinderbridge.ca when staging uses Render (NEXT_PUBLIC_API_URL).
  */
 function getApiBaseUrl(): string {
-  // Production URL - use subdomain if available
-  const PRODUCTION_API_URL = "https://api.kinderbridge.ca";
-  
-  // In middleware, we need to use environment variable or default
-  if (typeof process !== "undefined" && process.env) {
-    // Check if we're in production
-    const isProduction = process.env.NODE_ENV === "production";
-    
-    if (isProduction) {
-      return PRODUCTION_API_URL;
-    }
-    
-    // Development: use environment variable or fallback to localhost
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
-  }
+  const PRODUCTION_FALLBACK = "https://api.kinderbridge.ca";
+  const envUrl =
+    (typeof process !== "undefined" &&
+      process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "")) ||
+    "";
+  if (envUrl) return envUrl;
+  if (process.env.NODE_ENV === "production") return PRODUCTION_FALLBACK;
   return "http://localhost:5001";
 }
 
