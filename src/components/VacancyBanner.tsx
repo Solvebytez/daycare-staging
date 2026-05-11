@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Baby, Users, GraduationCap, School, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { apiClient } from "../lib/api";
 
 interface VacancyStats {
@@ -49,8 +50,20 @@ const ageGroupConfig = [
   },
 ];
 
+/** True when `stats` exists and at least one age group has a vacancy count. Narrows `stats` for TypeScript. */
+function hasVacancyData(stats: VacancyStats | undefined): stats is VacancyStats {
+  if (!stats) return false;
+  return !!(
+    stats.infant ||
+    stats.toddler ||
+    stats.preschool ||
+    stats.kindergarten ||
+    stats.schoolAge
+  );
+}
+
 export default function VacancyBanner() {
-  const { data: statsResponse, isLoading } = useQuery({
+  const { data: statsResponse, isLoading, isError } = useQuery({
     queryKey: ["vacancy-stats", "Toronto"],
     queryFn: async () => {
       const response = await apiClient.get(
@@ -134,9 +147,51 @@ export default function VacancyBanner() {
     );
   }
 
-  // Don't show banner if no stats or all counts are 0
-  if (!stats || (!stats.infant && !stats.toddler && !stats.preschool && !stats.schoolAge)) {
-    return null;
+  // Keep the section visible when counts are zero or the request failed (staging DB / CORS / network)
+  if (isError || !hasVacancyData(stats)) {
+    return (
+      <section className="py-6 sm:py-8 bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-6 py-3 sm:py-4">
+              <div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-tight">
+                  Available Daycare Spots in Toronto Today
+                </h2>
+                <p className="text-blue-100 text-xs sm:text-sm mt-0.5">
+                  Click any age group to see available daycares
+                </p>
+              </div>
+            </div>
+            <div className="p-6 sm:p-8 text-center">
+              <p className="text-gray-600 mb-5 max-w-lg mx-auto text-sm sm:text-base">
+                {isError
+                  ? "Live vacancy counts could not be loaded. You can still search Toronto daycares and filter by availability."
+                  : "There are no reported vacancy totals for these age groups in our data right now. Browse Toronto daycares to explore options and contact providers directly."}
+              </p>
+              <Link
+                href="/search?region=Toronto"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-blue-700"
+              >
+                Browse Toronto daycares
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="px-4 sm:px-6 pb-5">
+              <p className="text-[10px] sm:text-xs text-gray-500 text-center leading-relaxed border-t border-gray-200 pt-4">
+                Availability data is sourced from the Municipality website. Actual
+                spots may vary. Please contact daycares directly to confirm.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    );
   }
 
   const handleAgeGroupClick = (ageGroupKey: string) => {

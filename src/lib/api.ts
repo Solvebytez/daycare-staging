@@ -8,29 +8,29 @@ import axios, {
 export const getApiBaseUrl = () => {
   // Production URL - use subdomain if available, otherwise fallback to Render
   const PRODUCTION_API_URL = "https://api.kinderbridge.ca";
+  const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "");
 
   if (typeof window !== "undefined") {
-    // Client-side: check if we're on production
+    // Staging / preview: honor Vercel env so vacancy-stats and other calls hit the intended API
+    if (envUrl) {
+      return envUrl;
+    }
     const isProduction =
       window.location.hostname !== "localhost" &&
       window.location.hostname !== "127.0.0.1";
 
     if (isProduction) {
-      // Try subdomain first, fallback to Render if not available
       return PRODUCTION_API_URL;
     }
 
-    // Development: use environment variable or fallback to localhost
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+    return "http://localhost:5001";
   }
 
-  // Server-side: check NODE_ENV
   if (process.env.NODE_ENV === "production") {
-    return PRODUCTION_API_URL;
+    return envUrl || PRODUCTION_API_URL;
   }
 
-  // Server-side development: prefer env override (supports localhost frontend -> prod backend)
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+  return envUrl || "http://localhost:5001";
 };
 
 // Create axios instance
