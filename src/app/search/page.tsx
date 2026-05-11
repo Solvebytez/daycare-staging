@@ -1145,7 +1145,7 @@ function SearchPageContent() {
   });
 
   const { data: purchasesForReportBadges = [] } = useQuery({
-    queryKey: ["payments", "purchases", "reportBadges", user?.id],
+    queryKey: ["payments", "purchases", "reportBadges", user?._id],
     queryFn: async () => {
       const res = await listUserPurchases({
         status: "completed",
