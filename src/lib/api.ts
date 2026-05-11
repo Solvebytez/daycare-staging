@@ -46,10 +46,24 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
+function shouldProxyThroughVercelUpstream(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.location.hostname.endsWith(".vercel.app")
+  );
+}
+
 // Request interceptor - no need to add Authorization header, cookies are sent automatically
 apiClient.interceptors.request.use(
   (config) => {
-    // Cookies are automatically sent with withCredentials: true
+    // Vercel preview/production host: same-origin proxy avoids credentialed CORS to Render / api subdomain
+    if (shouldProxyThroughVercelUpstream()) {
+      const u = config.url || "";
+      if (u.startsWith("/api/") && !u.startsWith("/api/upstream/")) {
+        config.baseURL = "";
+        config.url = `${window.location.origin}/api/upstream${u}`;
+      }
+    }
     return config;
   },
   (error) => {
@@ -125,9 +139,9 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Try to refresh the access token
-        const refreshResponse = await axios.post(
-          `${getApiBaseUrl()}/api/auth/refresh`,
+        // Use apiClient so Vercel upstream proxy + cookies match the login flow
+        const refreshResponse = await apiClient.post(
+          "/api/auth/refresh",
           {},
           { withCredentials: true }
         );
