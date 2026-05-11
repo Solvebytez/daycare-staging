@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -32,7 +32,7 @@ const EMPTY_FORM: FormState = {
   specialNotes: "",
 };
 
-export default function AutoApplyThreeStepForm() {
+function AutoApplyThreeStepFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -534,5 +534,25 @@ export default function AutoApplyThreeStepForm() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function AutoApplyThreeStepForm() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50">
+          <Navigation />
+          <div className="flex min-h-[50vh] items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
+              <p className="text-sm text-gray-600">Loading…</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <AutoApplyThreeStepFormInner />
+    </Suspense>
   );
 }
