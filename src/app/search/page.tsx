@@ -12,7 +12,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, Filter, ArrowRight } from "lucide-react";
-import { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
 import { apiClient } from "../../lib/api";
 import MessagingSystem from "../../components/MessagingSystem";
@@ -40,6 +40,8 @@ import {
   listUserPurchases,
   reportPurchasedDaycareIdsFromPurchases,
 } from "../../lib/paymentsService";
+import { getUserApplications } from "../../lib/applicationsService";
+import { getAutoApplyBlockedDaycareIds } from "../../lib/autoApplyDuplicateDaycares";
 
 interface Daycare {
   id: string;
@@ -1165,6 +1167,25 @@ function SearchPageContent() {
     [purchasesForReportBadges]
   );
 
+  const { data: myApplicationsForAutoApply } = useQuery({
+    queryKey: ["userApplications", "autoApplyBlocks", user?._id],
+    queryFn: () => getUserApplications(),
+    enabled: Boolean(user && !authLoading),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    retry: 1,
+  });
+
+  const blockedAutoApplyDaycareIds = useMemo(() => {
+    if (
+      !myApplicationsForAutoApply?.success ||
+      !Array.isArray(myApplicationsForAutoApply.data)
+    ) {
+      return new Set<string>();
+    }
+    return getAutoApplyBlockedDaycareIds(myApplicationsForAutoApply.data);
+  }, [myApplicationsForAutoApply]);
+
   // Extract data from query response
   const daycaresData = useMemo(() => {
     const data = daycaresResponse?.data || [];
@@ -1340,11 +1361,43 @@ function SearchPageContent() {
     setCompareList(newCompareList);
   };
 
-  const toggleAutoApplySelect = useCallback((id: string) => {
-    setAutoApplySelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  }, []);
+  const toggleAutoApplySelect = useCallback(
+    (id: string) => {
+      const normalized = String(id).trim();
+      setAutoApplySelectedIds((prev) => {
+        const isSelected = prev.some((x) => String(x).trim() === normalized);
+        if (isSelected) {
+          return prev.filter((x) => String(x).trim() !== normalized);
+        }
+        if (user && blockedAutoApplyDaycareIds.has(normalized)) {
+          toast.error(
+            "You already have a pending or accepted application for this daycare. Choose another location.",
+            { duration: 4500 }
+          );
+          return prev;
+        }
+        return [...prev, id];
+      });
+    },
+    [user, blockedAutoApplyDaycareIds]
+  );
+
+  useEffect(() => {
+    if (!user || blockedAutoApplyDaycareIds.size === 0) return;
+    if (!autoApplyHydratedRef.current) return;
+    setAutoApplySelectedIds((prev) => {
+      const next = prev.filter(
+        (x) => !blockedAutoApplyDaycareIds.has(String(x).trim())
+      );
+      if (next.length < prev.length) {
+        toast("Removed daycares you already applied to from your selection.", {
+          icon: "ℹ️",
+          duration: 4500,
+        });
+      }
+      return next;
+    });
+  }, [user, blockedAutoApplyDaycareIds]);
 
   const clearComparison = () => {
     setCompareList([]);
@@ -1378,7 +1431,19 @@ function SearchPageContent() {
   }, [user, authLoading, saveRedirectUrl]);
 
   const handleAutoApplyClick = useCallback(() => {
-    if (autoApplySelectedIds.length === 0) return;
+    const persistedIds = readSearchSelection()?.selectedDaycareIds || [];
+    const idsToSend = [...new Set([...autoApplySelectedIds, ...persistedIds])]
+      .map((id) => String(id).trim())
+      .filter(Boolean)
+      .filter((id) => !blockedAutoApplyDaycareIds.has(id));
+
+    if (idsToSend.length === 0) {
+      toast.error(
+        "No new daycares to apply to — your selection only includes locations you already applied to.",
+        { duration: 5000 }
+      );
+      return;
+    }
     if (authLoading) return;
     const returnUrl =
       typeof window !== "undefined"
@@ -1386,19 +1451,20 @@ function SearchPageContent() {
         : "/search";
 
     if (user) {
-      const selectedIdsParam = encodeURIComponent(autoApplySelectedIds.join(","));
+      const selectedIdsParam = encodeURIComponent(idsToSend.join(","));
       router.push(`/parent-details?selectedIds=${selectedIdsParam}`);
       return;
     }
 
     saveAutoApplyPending({
       returnUrl,
-      selectedDaycareIds: autoApplySelectedIds,
+      selectedDaycareIds: idsToSend,
     });
     saveRedirectUrl(returnUrl);
     router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
   }, [
     autoApplySelectedIds,
+    blockedAutoApplyDaycareIds,
     user,
     authLoading,
     router,
@@ -1681,6 +1747,7 @@ function SearchPageContent() {
               onPreviousPage={goToPreviousPage}
               onNextPage={goToNextPage}
               autoApplySelectedIds={autoApplySelectedIds}
+              autoApplyBlockedDaycareIds={blockedAutoApplyDaycareIds}
               purchasedReportDaycareIds={purchasedReportDaycareIds}
               onToggleAutoApplySelect={toggleAutoApplySelect}
             />

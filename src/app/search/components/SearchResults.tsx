@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import MapView from "./MapView";
 import { formatDaycarePrice } from "../../../utils/priceFormatter";
 
@@ -64,11 +65,14 @@ interface SearchResultsProps {
   onPreviousPage: () => void;
   onNextPage: () => void;
   autoApplySelectedIds: string[];
+  /** Daycare IDs the user cannot select for auto-apply (already pending/accepted). */
+  autoApplyBlockedDaycareIds?: ReadonlySet<string>;
   /** Daycare IDs where the user already bought the full report (or similar). */
   purchasedReportDaycareIds?: ReadonlySet<string>;
   onToggleAutoApplySelect: (id: string) => void;
 }
 
+const EMPTY_BLOCKED = new Set<string>();
 const EMPTY_PURCHASED_REPORT = new Set<string>();
 
 export default function SearchResults({
@@ -93,9 +97,11 @@ export default function SearchResults({
   onPreviousPage,
   onNextPage,
   autoApplySelectedIds,
+  autoApplyBlockedDaycareIds,
   purchasedReportDaycareIds,
   onToggleAutoApplySelect,
 }: SearchResultsProps) {
+  const blockedIds = autoApplyBlockedDaycareIds ?? EMPTY_BLOCKED;
   const purchasedReportIds =
     purchasedReportDaycareIds ?? EMPTY_PURCHASED_REPORT;
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
@@ -282,6 +288,9 @@ export default function SearchResults({
                 {displayedDaycares.map((daycare) => {
                   const isCostOpen =
                     costBreakdownOpenById[daycare.id] ?? false;
+                  const isAutoApplyBlocked = blockedIds.has(
+                    String(daycare.id).trim()
+                  );
                   const isReportPurchased = purchasedReportIds.has(
                     String(daycare.id).trim()
                   );
@@ -299,9 +308,20 @@ export default function SearchResults({
                       ) {
                         return;
                       }
+                      if (isAutoApplyBlocked) {
+                        toast.error(
+                          "You already have a pending or accepted application for this daycare. Choose another location.",
+                          { duration: 4500 }
+                        );
+                        return;
+                      }
                       onToggleAutoApplySelect(daycare.id);
                     }}
-                    className={`relative cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group ${
+                    className={`relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border overflow-hidden transition-all duration-300 group ${
+                      isAutoApplyBlocked
+                        ? "cursor-not-allowed border-amber-200/90 opacity-95"
+                        : "cursor-pointer border-gray-200/50 hover:shadow-xl hover:scale-[1.02]"
+                    } ${
                       autoApplySelectedIds.includes(daycare.id)
                         ? "ring-2 ring-red-500 ring-offset-2 ring-offset-white/80"
                         : ""
@@ -334,6 +354,15 @@ export default function SearchResults({
                               onClick={(e) => e.stopPropagation()}
                             >
                               Already purchased
+                            </div>
+                          )}
+                          {isAutoApplyBlocked && (
+                            <div
+                              className="rounded-lg bg-amber-100 px-2 py-2 text-center text-[11px] font-semibold leading-tight text-amber-950 ring-1 ring-amber-200"
+                              data-skip-card-select
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Already applied
                             </div>
                           )}
                         </div>
