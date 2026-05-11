@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Baby, Users, GraduationCap, School, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { apiClient } from "../lib/api";
 
 interface VacancyStats {
   region: string;
@@ -66,10 +65,15 @@ export default function VacancyBanner() {
   const { data: statsResponse, isLoading, isError } = useQuery({
     queryKey: ["vacancy-stats", "Toronto"],
     queryFn: async () => {
-      const response = await apiClient.get(
-        "/api/daycares/vacancy-stats?region=Toronto"
+      // Same-origin Next route → server proxies to Express (avoids credentialed CORS on Vercel)
+      const res = await fetch(
+        "/api/daycares/vacancy-stats?region=Toronto",
+        { credentials: "same-origin" }
       );
-      return response.data as { data: VacancyStats };
+      if (!res.ok) {
+        throw new Error(`Vacancy stats HTTP ${res.status}`);
+      }
+      return (await res.json()) as { data: VacancyStats };
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     refetchOnWindowFocus: false,
