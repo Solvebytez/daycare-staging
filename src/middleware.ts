@@ -70,6 +70,13 @@ function getApiBaseUrl(): string {
   return "http://localhost:5001";
 }
 
+/** Path + query for post-login redirect; strip Next.js internal params */
+function redirectPathPreservingQuery(request: NextRequest): string {
+  const u = request.nextUrl.clone();
+  u.searchParams.delete("_rsc");
+  return u.pathname + u.search;
+}
+
 /**
  * Handle role-based redirects based on user type
  */
@@ -175,7 +182,6 @@ async function refreshTokenIfNeeded(
   }
 
   try {
-    lastRefreshTime.set(refreshToken, now);
     console.log("🔄 Proactively refreshing missing accessToken...");
 
     const apiUrl = getApiBaseUrl();
@@ -222,6 +228,7 @@ async function refreshTokenIfNeeded(
       response.headers.set("set-cookie", setCookieHeader);
     }
 
+    lastRefreshTime.set(refreshToken, Date.now());
     return response;
   } catch (error) {
     console.error("💥 Proactive refresh error:", error);
@@ -297,7 +304,7 @@ export async function middleware(request: NextRequest) {
       console.log("❌ No refresh token found, redirecting to login");
       // Build redirect URL with original pathname and query params
       const redirectUrl = new URL("/login", request.url);
-      const originalUrl = pathname + request.nextUrl.search;
+      const originalUrl = redirectPathPreservingQuery(request);
       redirectUrl.searchParams.set("redirect", originalUrl);
       const response = NextResponse.redirect(redirectUrl);
       response.cookies.delete("accessToken");
@@ -351,36 +358,18 @@ export async function middleware(request: NextRequest) {
           const userEmail = cachedData.data?.data?.user?.email;
           if (userType && userEmail) {
             return handleUserTypeRedirect(userType, pathname, request);
-          } else {
-            console.log(
-              "❌ Invalid throttled cached data, clearing cookies and redirecting to login"
-            );
-            const redirectUrl = new URL("/login", request.url);
-            const originalUrl = pathname + request.nextUrl.search;
-            redirectUrl.searchParams.set("redirect", originalUrl);
-            const response = NextResponse.redirect(redirectUrl);
-            response.cookies.delete("refreshToken");
-            response.cookies.delete("accessToken");
-            response.headers.set("x-clear-auth", "true");
-            tokenCache.delete(cacheKey);
-            return response;
           }
+          console.log(
+            "❌ Invalid throttled cached data; clearing cache and attempting refresh"
+          );
+          tokenCache.delete(cacheKey);
         } else {
           console.log(
-            "❌ No cached data during throttle, clearing cookies and redirecting to login"
+            "⏱️ No cached data during throttle window; attempting refresh (avoids false logout on concurrent navigations)"
           );
-          const redirectUrl = new URL("/login", request.url);
-          const originalUrl = pathname + request.nextUrl.search;
-          redirectUrl.searchParams.set("redirect", originalUrl);
-          const response = NextResponse.redirect(redirectUrl);
-          response.cookies.delete("refreshToken");
-          response.cookies.delete("accessToken");
-          response.headers.set("x-clear-auth", "true");
-          return response;
         }
       }
 
-      lastRefreshTime.set(refreshToken, now);
       console.log("🔄 Attempting to refresh token and get user info...");
 
       // Refresh the token and get user info in one call
@@ -449,6 +438,8 @@ export async function middleware(request: NextRequest) {
         });
       }
 
+      lastRefreshTime.set(refreshToken, Date.now());
+
       console.log("👤 User type from refresh:", userType);
       console.log("👤 User email from refresh:", userEmail);
       console.log("📍 Requested path:", pathname);
@@ -476,7 +467,7 @@ export async function middleware(request: NextRequest) {
         );
         // Invalid user data - clear cookies and redirect to login
         const redirectUrl = new URL("/login", request.url);
-        const originalUrl = pathname + request.nextUrl.search;
+        const originalUrl = redirectPathPreservingQuery(request);
         redirectUrl.searchParams.set("redirect", originalUrl);
         const response = NextResponse.redirect(redirectUrl);
         response.cookies.delete("refreshToken");
@@ -487,7 +478,7 @@ export async function middleware(request: NextRequest) {
     } catch (error) {
       console.error("💥 Middleware error:", error);
       const redirectUrl = new URL("/login", request.url);
-      const originalUrl = pathname + request.nextUrl.search;
+      const originalUrl = redirectPathPreservingQuery(request);
       redirectUrl.searchParams.set("redirect", originalUrl);
       const response = NextResponse.redirect(redirectUrl);
       response.cookies.delete("refreshToken");
@@ -539,7 +530,6 @@ export async function middleware(request: NextRequest) {
 
         if (timeSinceLastRefresh >= REFRESH_THROTTLE_MS) {
           console.log("🔄 Checking authentication status...");
-          lastRefreshTime.set(refreshToken, now);
 
           try {
             const apiUrl = getApiBaseUrl();
@@ -606,6 +596,7 @@ export async function middleware(request: NextRequest) {
                   redirectResponse.headers.set("set-cookie", setCookieHeader);
                 }
 
+                lastRefreshTime.set(refreshToken, Date.now());
                 return redirectResponse;
               }
             } else {

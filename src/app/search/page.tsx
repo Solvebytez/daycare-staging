@@ -36,6 +36,10 @@ import {
   readSearchSelection,
   clearSearchSelection,
 } from "../../lib/autoApplyPending";
+import {
+  listUserPurchases,
+  reportPurchasedDaycareIdsFromPurchases,
+} from "../../lib/paymentsService";
 
 interface Daycare {
   id: string;
@@ -1140,6 +1144,27 @@ function SearchPageContent() {
     refetchOnWindowFocus: false,
   });
 
+  const { data: purchasesForReportBadges = [] } = useQuery({
+    queryKey: ["payments", "purchases", "reportBadges", user?.id],
+    queryFn: async () => {
+      const res = await listUserPurchases({
+        status: "completed",
+        limit: 200,
+        skip: 0,
+      });
+      return res.success && Array.isArray(res.data) ? res.data : [];
+    },
+    enabled: Boolean(user && !authLoading),
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+    retry: 1,
+  });
+
+  const purchasedReportDaycareIds = useMemo(
+    () => reportPurchasedDaycareIdsFromPurchases(purchasesForReportBadges),
+    [purchasesForReportBadges]
+  );
+
   // Extract data from query response
   const daycaresData = useMemo(() => {
     const data = daycaresResponse?.data || [];
@@ -1552,8 +1577,8 @@ function SearchPageContent() {
           {/* Floating Compare Button */}
           {compareList.length > 0 && (
             <div
-              className={`fixed right-6 z-40 transition-[bottom] duration-300 ${
-                autoApplySelectedIds.length > 0 ? "bottom-28" : "bottom-6"
+              className={`fixed right-6 z-40 transition-[top] duration-300 ${
+                autoApplySelectedIds.length > 0 ? "top-40" : "top-24"
               }`}
             >
               <button
@@ -1568,19 +1593,22 @@ function SearchPageContent() {
           )}
 
           {autoApplySelectedIds.length > 0 && (
-            <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-6 pt-2">
-              <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-gray-200/80 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
-                <p className="text-center text-sm font-medium text-gray-800 sm:text-left">
+            <div className="pointer-events-none fixed right-6 top-24 z-50">
+              <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-gray-200/80 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur-md">
+                <p className="text-sm font-bold text-gray-800">
                   {autoApplySelectedIds.length} selected
                 </p>
                 <button
                   type="button"
                   onClick={handleAutoApplyClick}
                   disabled={authLoading}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Auto-Apply to {autoApplySelectedIds.length}{" "}
-                  {autoApplySelectedIds.length === 1 ? "Daycare" : "Daycares"}
+                  Auto-Apply
+                  <span className="sr-only">
+                    to {autoApplySelectedIds.length}{" "}
+                    {autoApplySelectedIds.length === 1 ? "Daycare" : "Daycares"}
+                  </span>
                   <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                 </button>
               </div>
@@ -1653,6 +1681,7 @@ function SearchPageContent() {
               onPreviousPage={goToPreviousPage}
               onNextPage={goToNextPage}
               autoApplySelectedIds={autoApplySelectedIds}
+              purchasedReportDaycareIds={purchasedReportDaycareIds}
               onToggleAutoApplySelect={toggleAutoApplySelect}
             />
           </div>

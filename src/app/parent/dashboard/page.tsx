@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useContactLogs } from "@/hooks/useContactLogs";
@@ -17,6 +18,7 @@ import {
   DocumentTextIcon,
   EllipsisVerticalIcon,
   ExclamationTriangleIcon,
+  BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 
 interface SavedSearch {
@@ -41,6 +43,7 @@ interface Application {
 }
 
 export default function ParentDashboard() {
+  const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const {
     favorites,
@@ -65,6 +68,8 @@ export default function ParentDashboard() {
   } = useApplications();
 
   const [activeTab, setActiveTab] = useState("favorites");
+  const [myDaycaresPage, setMyDaycaresPage] = useState(1);
+  const [myDaycaresPageSize, setMyDaycaresPageSize] = useState(10);
   const [selectedContactLog, setSelectedContactLog] = useState<ContactLogResponse | null>(null);
   const [isContactLogModalOpen, setIsContactLogModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -74,14 +79,42 @@ export default function ParentDashboard() {
   const [openFavoriteDropdownId, setOpenFavoriteDropdownId] = useState<string | null>(null);
   const [removeFavoriteId, setRemoveFavoriteId] = useState<string | null>(null);
 
-  // Read tab from URL query parameter on mount
-  useEffect(() => {
+  const allowedTabs = useMemo(
+    () => new Set(["favorites", "applications", "my-daycares"]),
+    []
+  );
+
+  const getTabFromLocation = () => {
+    if (typeof window === "undefined") return "favorites";
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get("tab");
-    if (tabParam && ["favorites", "applications"].includes(tabParam)) {
-      setActiveTab(tabParam);
+    return tabParam && allowedTabs.has(tabParam) ? tabParam : "favorites";
+  };
+
+  useEffect(() => {
+    const nextTab = getTabFromLocation();
+    if (nextTab !== activeTab) setActiveTab(nextTab);
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.get("tab")) {
+        router.replace(`/parent/dashboard?tab=${nextTab}`, { scroll: false });
+      }
     }
-  }, []);
+
+    const onPopState = () => {
+      setActiveTab(getTabFromLocation());
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowedTabs]);
+
+  const setActiveTabAndUrl = (tabId: string) => {
+    const nextTab = allowedTabs.has(tabId) ? tabId : "favorites";
+    setActiveTab(nextTab);
+    router.push(`/parent/dashboard?tab=${nextTab}`, { scroll: false });
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -289,10 +322,30 @@ export default function ParentDashboard() {
     });
   }, [contactLogs]);
 
+  const autoApplyApplications = useMemo(() => {
+    const apps = Array.isArray(actualApplications) ? actualApplications : [];
+    return apps.filter((a) => (a as { source?: string })?.source === "auto_apply");
+  }, [actualApplications]);
+
+  useEffect(() => {
+    setMyDaycaresPage(1);
+  }, [autoApplyApplications.length, myDaycaresPageSize]);
+
+  const myDaycaresTotalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(autoApplyApplications.length / myDaycaresPageSize));
+  }, [autoApplyApplications.length, myDaycaresPageSize]);
+
+  const myDaycaresPagedApps = useMemo(() => {
+    const safePage = Math.min(Math.max(1, myDaycaresPage), myDaycaresTotalPages);
+    const start = (safePage - 1) * myDaycaresPageSize;
+    return autoApplyApplications.slice(start, start + myDaycaresPageSize);
+  }, [autoApplyApplications, myDaycaresPage, myDaycaresPageSize, myDaycaresTotalPages]);
+
   // Note: Authentication and redirects are handled by middleware
   // This component trusts that middleware has validated access
 
   const tabs = [
+    { id: "my-daycares", name: "My Daycares", icon: BuildingOffice2Icon },
     { id: "favorites", name: "Favorites", icon: MagnifyingGlassIcon },
     { id: "applications", name: "Applications", icon: DocumentTextIcon },
   ];
@@ -389,7 +442,7 @@ export default function ParentDashboard() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => setActiveTabAndUrl(tab.id)}
                   className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-t-lg transition-colors border-b-2 ${
                     isActive
                       ? "bg-blue-600 text-white border-blue-600"
@@ -418,7 +471,7 @@ export default function ParentDashboard() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => setActiveTabAndUrl(tab.id)}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
                       isActive
                         ? "bg-blue-600 text-white"
@@ -440,6 +493,271 @@ export default function ParentDashboard() {
           {/* Main Content */}
           <div className="flex-1 w-full">
             {/* Tab Content */}
+            {activeTab === "my-daycares" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-6">
+                  <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                    My Daycares
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tracking {autoApplyApplications.length}{" "}
+                    {autoApplyApplications.length === 1
+                      ? "auto-apply submission"
+                      : "auto-apply submissions"}{" "}
+                    for{" "}
+                    <span className="font-semibold text-gray-700">
+                      {user?.firstName} {user?.lastName}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                  {(() => {
+                    const total = autoApplyApplications.length;
+                    const responses = autoApplyApplications.filter(
+                      (a) => a.status !== "pending"
+                    ).length;
+                    const followUps = 0;
+                    const viewed = 0;
+                    const pending = autoApplyApplications.filter(
+                      (a) => a.status === "pending"
+                    ).length;
+                    const cards = [
+                      {
+                        label: "Total",
+                        value: total,
+                        bg: "bg-violet-50",
+                        text: "text-violet-700",
+                      },
+                      {
+                        label: "Responses",
+                        value: responses,
+                        bg: "bg-emerald-50",
+                        text: "text-emerald-700",
+                      },
+                      {
+                        label: "Follow-Ups",
+                        value: followUps,
+                        bg: "bg-amber-50",
+                        text: "text-amber-700",
+                      },
+                      {
+                        label: "Viewed",
+                        value: viewed,
+                        bg: "bg-fuchsia-50",
+                        text: "text-fuchsia-700",
+                      },
+                      {
+                        label: "Pending",
+                        value: pending,
+                        bg: "bg-slate-50",
+                        text: "text-slate-700",
+                      },
+                    ];
+                    return cards.map((c) => (
+                      <div
+                        key={c.label}
+                        className={`rounded-2xl border border-gray-200 ${c.bg} p-5 text-center`}
+                      >
+                        <div className={`text-3xl font-extrabold ${c.text}`}>{c.value}</div>
+                        <div className="text-xs font-medium text-gray-500 mt-1">{c.label}</div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+
+                <div className="mb-8">
+                  <div className="flex items-end justify-between gap-4 mb-3">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Purchased Credits Usage
+                      </h2>
+                      <p className="text-sm text-gray-500">
+                        Daycares you submitted via Auto-Apply (uses 1 credit each).
+                      </p>
+                    </div>
+                    <Link
+                      href="/search"
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                    >
+                      Find more
+                    </Link>
+                  </div>
+
+                  {autoApplyApplications.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                      <p className="text-gray-700 font-medium">No auto-apply submissions yet.</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        After you use Auto-Apply, your submitted daycares will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Daycare
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Child
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Portal
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                City
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Status
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Response Message
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Submitted
+                              </th>
+                              <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {myDaycaresPagedApps.map((app, rowIdx) => {
+                              const daycare = app.daycare || null;
+                              const daycareId = (daycare?._id ||
+                                daycare?.id ||
+                                app.daycareId) as string | undefined;
+                              const name =
+                                (daycare?.name as string | undefined) || "KinderBridge";
+                              const childName =
+                                (app as unknown as { childName?: string }).childName || "";
+                              const portal =
+                                (app as unknown as { portal?: string }).portal || "";
+                              const city = (daycare?.city as string | undefined) || "—";
+                              const responseMessage =
+                                (app as unknown as { responseMessage?: string })
+                                  .responseMessage || "";
+                              const submitted = app.createdAt
+                                ? new Date(app.createdAt).toLocaleDateString(undefined, {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })
+                                : "—";
+                              const rowKey = String(
+                                (app as { _id?: string; id?: string })._id ||
+                                  (app as { id?: string }).id ||
+                                  daycareId ||
+                                  `row-${rowIdx}`
+                              );
+
+                              return (
+                                <tr key={rowKey} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                                    {name}
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-700">
+                                    {childName?.trim() ? childName : "—"}
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-700">
+                                    {portal || "—"}
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-600">{city}</td>
+                                  <td className="px-6 py-4 text-sm">
+                                    <span
+                                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusColor(
+                                        app.status
+                                      )}`}
+                                    >
+                                      {getStatusText(app.status)}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-700 max-w-[28rem]">
+                                    <span className="line-clamp-2">
+                                      {responseMessage || "—"}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-600">{submitted}</td>
+                                  <td className="px-6 py-4 text-right">
+                                    {daycareId ? (
+                                      <Link
+                                        href={`/daycare/${String(daycareId)}`}
+                                        className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                                      >
+                                        View
+                                      </Link>
+                                    ) : (
+                                      <span className="text-sm text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          <p className="text-sm text-gray-600">
+                            Page{" "}
+                            <span className="font-semibold text-gray-900">{myDaycaresPage}</span> of{" "}
+                            <span className="font-semibold text-gray-900">
+                              {myDaycaresTotalPages}
+                            </span>
+                          </p>
+                          <label className="flex items-center gap-2 text-sm text-gray-600">
+                            Rows
+                            <select
+                              value={myDaycaresPageSize}
+                              onChange={(e) =>
+                                setMyDaycaresPageSize(Number(e.target.value) || 10)
+                              }
+                              className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
+                            >
+                              <option value={5}>5</option>
+                              <option value={10}>10</option>
+                              <option value={20}>20</option>
+                              <option value={50}>50</option>
+                            </select>
+                          </label>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setMyDaycaresPage((p) => Math.max(1, p - 1))}
+                            disabled={myDaycaresPage <= 1}
+                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Prev
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setMyDaycaresPage((p) =>
+                                Math.min(myDaycaresTotalPages, p + 1)
+                              )
+                            }
+                            disabled={myDaycaresPage >= myDaycaresTotalPages}
+                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
             {activeTab === "favorites" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

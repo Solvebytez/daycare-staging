@@ -64,8 +64,12 @@ interface SearchResultsProps {
   onPreviousPage: () => void;
   onNextPage: () => void;
   autoApplySelectedIds: string[];
+  /** Daycare IDs where the user already bought the full report (or similar). */
+  purchasedReportDaycareIds?: ReadonlySet<string>;
   onToggleAutoApplySelect: (id: string) => void;
 }
+
+const EMPTY_PURCHASED_REPORT = new Set<string>();
 
 export default function SearchResults({
   isLoading,
@@ -89,8 +93,11 @@ export default function SearchResults({
   onPreviousPage,
   onNextPage,
   autoApplySelectedIds,
+  purchasedReportDaycareIds,
   onToggleAutoApplySelect,
 }: SearchResultsProps) {
+  const purchasedReportIds =
+    purchasedReportDaycareIds ?? EMPTY_PURCHASED_REPORT;
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [costBreakdownOpenById, setCostBreakdownOpenById] = useState<
     Record<string, boolean>
@@ -275,6 +282,9 @@ export default function SearchResults({
                 {displayedDaycares.map((daycare) => {
                   const isCostOpen =
                     costBreakdownOpenById[daycare.id] ?? false;
+                  const isReportPurchased = purchasedReportIds.has(
+                    String(daycare.id).trim()
+                  );
                   return (
                   <motion.div
                     key={daycare.id}
@@ -307,14 +317,25 @@ export default function SearchResults({
                     )}
                     <div className="p-6">
                       <div className="flex flex-col lg:flex-row gap-6">
-                        {/* Image Placeholder */}
-                        <div className="lg:w-48 lg:h-32 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center border border-gray-200 group-hover:border-blue-300 transition-colors">
-                          <div className="text-center">
-                            <div className="text-4xl mb-1">🏠</div>
-                            <div className="text-xs text-gray-500 font-medium">
-                              KinderBridge Image
+                        {/* Image + badges under image */}
+                        <div className="flex w-full shrink-0 flex-col gap-2 lg:w-48">
+                          <div className="w-full bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex min-h-[7.5rem] items-center justify-center border border-gray-200 group-hover:border-blue-300 transition-colors lg:h-32 lg:min-h-0">
+                            <div className="text-center">
+                              <div className="text-4xl mb-1">🏠</div>
+                              <div className="text-xs text-gray-500 font-medium">
+                                KinderBridge Image
+                              </div>
                             </div>
                           </div>
+                          {isReportPurchased && (
+                            <div
+                              className="rounded-lg bg-emerald-100 px-2 py-2 text-center text-[11px] font-semibold leading-tight text-emerald-950 ring-1 ring-emerald-200"
+                              data-skip-card-select
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Already purchased
+                            </div>
+                          )}
                         </div>
 
                         {/* Content */}
