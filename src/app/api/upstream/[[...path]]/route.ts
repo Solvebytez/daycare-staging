@@ -9,9 +9,19 @@ function backendOrigin(): string {
   );
 }
 
-/** Strip Domain so Set-Cookie applies to the current host (e.g. *.vercel.app). */
-function scrubSetCookie(cookie: string): string {
-  return cookie.replace(/;\s*[Dd]omain=[^;]*/g, "");
+/**
+ * Auth cookies from Render may use Domain=.kinderbridge.ca + SameSite=None (cross-site SPA).
+ * The browser stores them on the Vercel host after we strip Domain; SameSite=None can still
+ * be dropped or mishandled on refresh. Force Lax + host-only for this same-origin proxy.
+ */
+function normalizeProxySetCookie(cookie: string): string {
+  let c = cookie.replace(/;\s*[Dd]omain=[^;]*/gi, "");
+  c = c.replace(/;\s*SameSite=[^;]*/gi, "; SameSite=Lax");
+  if (!/;\s*SameSite=/i.test(c)) {
+    c += "; SameSite=Lax";
+  }
+  c = c.replace(/;;+/g, ";").replace(/^[;\s]+|[;\s]+$/g, "").trim();
+  return c;
 }
 
 async function forward(
@@ -29,16 +39,28 @@ async function forward(
   const headers = new Headers();
   request.headers.forEach((value, key) => {
     const k = key.toLowerCase();
-    if (["host", "connection", "content-length", "transfer-encoding"].includes(k)) {
+    // Do not forward hop-by-hop or encoding: we force identity to upstream so the
+    // body we buffer is plain JSON (avoids gzip/br bytes + stripped headers mismatch).
+    if (
+      [
+        "host",
+        "connection",
+        "content-length",
+        "transfer-encoding",
+        "accept-encoding",
+      ].includes(k)
+    ) {
       return;
     }
     headers.set(key, value);
   });
+  headers.set("Accept-Encoding", "identity");
 
   const init: RequestInit = {
     method: request.method,
     headers,
     redirect: "manual",
+    cache: "no-store",
   };
 
   if (request.method !== "GET" && request.method !== "HEAD") {
@@ -57,56 +79,43 @@ async function forward(
     );
   }
 
-  // Node fetch decompresses gzip/br; forwarding Content-Encoding with a decoded body
-  // causes net::ERR_CONTENT_DECODING_FAILED in the browser.
-  const SKIP_RESPONSE_HEADERS = new Set([
-    "content-encoding",
-    "content-length",
-    "transfer-encoding",
-    "connection",
-    "keep-alive",
-    "set-cookie",
-  ]);
-
   const getSetCookie = (
     upstream.headers as unknown as { getSetCookie?: () => string[] }
   ).getSetCookie?.bind(upstream.headers);
 
-  if (request.method === "HEAD") {
-    const out = new NextResponse(null, { status: upstream.status });
-    if (getSetCookie) {
-      for (const raw of getSetCookie()) {
-        out.headers.append("Set-Cookie", scrubSetCookie(raw));
-      }
-    } else {
-      const single = upstream.headers.get("set-cookie");
-      if (single) out.headers.append("Set-Cookie", scrubSetCookie(single));
-    }
-    upstream.headers.forEach((value, key) => {
-      if (SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) return;
+  /** Only forward safe headers; never forward encoding/length from upstream (Vercel may gzip again). */
+  function copySafeUpstreamHeaders(out: NextResponse, upstreamRes: Response) {
+    const allow = new Set(["content-type", "cache-control", "etag"]);
+    upstreamRes.headers.forEach((value, key) => {
+      const k = key.toLowerCase();
+      if (k === "set-cookie") return;
+      if (!allow.has(k)) return;
       out.headers.set(key, value);
     });
+  }
+
+  function appendNormalizedCookies(out: NextResponse) {
+    if (getSetCookie) {
+      for (const raw of getSetCookie()) {
+        out.headers.append("Set-Cookie", normalizeProxySetCookie(raw));
+      }
+      return;
+    }
+    const single = upstream.headers.get("set-cookie");
+    if (single) out.headers.append("Set-Cookie", normalizeProxySetCookie(single));
+  }
+
+  if (request.method === "HEAD") {
+    const out = new NextResponse(null, { status: upstream.status });
+    appendNormalizedCookies(out);
+    copySafeUpstreamHeaders(out, upstream);
     return out;
   }
 
   const buf = await upstream.arrayBuffer();
   const out = new NextResponse(buf, { status: upstream.status });
-
-  if (getSetCookie) {
-    for (const raw of getSetCookie()) {
-      out.headers.append("Set-Cookie", scrubSetCookie(raw));
-    }
-  } else {
-    const single = upstream.headers.get("set-cookie");
-    if (single) {
-      out.headers.append("Set-Cookie", scrubSetCookie(single));
-    }
-  }
-
-  upstream.headers.forEach((value, key) => {
-    if (SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) return;
-    out.headers.set(key, value);
-  });
+  appendNormalizedCookies(out);
+  copySafeUpstreamHeaders(out, upstream);
 
   return out;
 }
