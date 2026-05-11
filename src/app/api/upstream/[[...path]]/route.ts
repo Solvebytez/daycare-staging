@@ -57,12 +57,41 @@ async function forward(
     );
   }
 
-  const body = upstream.body;
-  const out = new NextResponse(body, { status: upstream.status });
+  // Node fetch decompresses gzip/br; forwarding Content-Encoding with a decoded body
+  // causes net::ERR_CONTENT_DECODING_FAILED in the browser.
+  const SKIP_RESPONSE_HEADERS = new Set([
+    "content-encoding",
+    "content-length",
+    "transfer-encoding",
+    "connection",
+    "keep-alive",
+    "set-cookie",
+  ]);
 
   const getSetCookie = (
     upstream.headers as unknown as { getSetCookie?: () => string[] }
   ).getSetCookie?.bind(upstream.headers);
+
+  if (request.method === "HEAD") {
+    const out = new NextResponse(null, { status: upstream.status });
+    if (getSetCookie) {
+      for (const raw of getSetCookie()) {
+        out.headers.append("Set-Cookie", scrubSetCookie(raw));
+      }
+    } else {
+      const single = upstream.headers.get("set-cookie");
+      if (single) out.headers.append("Set-Cookie", scrubSetCookie(single));
+    }
+    upstream.headers.forEach((value, key) => {
+      if (SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) return;
+      out.headers.set(key, value);
+    });
+    return out;
+  }
+
+  const buf = await upstream.arrayBuffer();
+  const out = new NextResponse(buf, { status: upstream.status });
+
   if (getSetCookie) {
     for (const raw of getSetCookie()) {
       out.headers.append("Set-Cookie", scrubSetCookie(raw));
@@ -75,9 +104,7 @@ async function forward(
   }
 
   upstream.headers.forEach((value, key) => {
-    const k = key.toLowerCase();
-    if (k === "set-cookie") return;
-    if (["transfer-encoding", "connection"].includes(k)) return;
+    if (SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) return;
     out.headers.set(key, value);
   });
 
