@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useContactLogs } from "@/hooks/useContactLogs";
 import { useApplications } from "@/hooks/useApplications";
+import { useEnrollments } from "@/hooks/useEnrollments";
+import EnrollmentStatusBadge from "@/components/enrollment/EnrollmentStatusBadge";
 import Navigation from "@/components/Navigation";
 import ContactLogDetailsModal from "@/components/ContactLogDetailsModal";
 import EditContactLogModal from "@/components/EditContactLogModal";
@@ -66,6 +68,8 @@ export default function ParentDashboard() {
     deleteApplication,
     isDeletingApplication,
   } = useApplications();
+
+  const { byApplicationId: enrollmentsByAppId } = useEnrollments();
 
   const [activeTab, setActiveTab] = useState("favorites");
   const [myDaycaresPage, setMyDaycaresPage] = useState(1);
@@ -580,12 +584,20 @@ export default function ParentDashboard() {
                         Daycares you submitted via Auto-Apply (uses 1 credit each).
                       </p>
                     </div>
-                    <Link
-                      href="/search"
-                      className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-                    >
-                      Find more
-                    </Link>
+                    <div className="flex items-center gap-4">
+                      <Link
+                        href="/enrollments"
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                      >
+                        Registrations
+                      </Link>
+                      <Link
+                        href="/search"
+                        className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                      >
+                        Find more
+                      </Link>
+                    </div>
                   </div>
 
                   {autoApplyApplications.length === 0 ? (
@@ -612,6 +624,9 @@ export default function ParentDashboard() {
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 City
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Registration
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 Status
@@ -656,6 +671,7 @@ export default function ParentDashboard() {
                                   daycareId ||
                                   `row-${rowIdx}`
                               );
+                              const enrollment = enrollmentsByAppId.get(rowKey);
 
                               return (
                                 <tr key={rowKey} className="hover:bg-gray-50">
@@ -669,6 +685,18 @@ export default function ParentDashboard() {
                                     {portal || "—"}
                                   </td>
                                   <td className="px-6 py-4 text-sm text-gray-600">{city}</td>
+                                  <td className="px-6 py-4 text-sm">
+                                    {enrollment ? (
+                                      <EnrollmentStatusBadge record={enrollment} />
+                                    ) : (
+                                      <Link
+                                        href={`/enrollment/${rowKey}`}
+                                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                      >
+                                        Start form
+                                      </Link>
+                                    )}
+                                  </td>
                                   <td className="px-6 py-4 text-sm">
                                     <span
                                       className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusColor(
@@ -684,7 +712,13 @@ export default function ParentDashboard() {
                                     </span>
                                   </td>
                                   <td className="px-6 py-4 text-sm text-gray-600">{submitted}</td>
-                                  <td className="px-6 py-4 text-right">
+                                  <td className="px-6 py-4 text-right space-x-3">
+                                    <Link
+                                      href={`/enrollment/${rowKey}`}
+                                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                                    >
+                                      Registration
+                                    </Link>
                                     {daycareId ? (
                                       <Link
                                         href={`/daycare/${String(daycareId)}`}
@@ -692,9 +726,7 @@ export default function ParentDashboard() {
                                       >
                                         View
                                       </Link>
-                                    ) : (
-                                      <span className="text-sm text-gray-400">—</span>
-                                    )}
+                                    ) : null}
                                   </td>
                                 </tr>
                               );

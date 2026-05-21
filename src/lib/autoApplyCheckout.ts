@@ -1,3 +1,6 @@
+import type { AutoApplyOptionalExtras } from "./autoApplyEnrollmentExtras";
+import type { EnrollmentPayload } from "./enrollmentsService";
+
 export type AutoApplyCheckoutDraft = {
   daycareIds: string[];
   selectedCount: number;
@@ -8,6 +11,10 @@ export type AutoApplyCheckoutDraft = {
   childDob: string;
   preferredStartDate: string;
   specialNotes?: string;
+  /** Optional n8n fields from 3-step form steps 1–2 */
+  optionalExtras?: AutoApplyOptionalExtras;
+  /** Built payload for enrollment records (sent on auto-apply API) */
+  enrollmentPayload?: Partial<EnrollmentPayload>;
 };
 
 const AUTO_APPLY_CHECKOUT_KEY = "kb_auto_apply_checkout_v1";

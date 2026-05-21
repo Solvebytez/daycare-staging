@@ -17,6 +17,7 @@ import {
   type AutoApplyCheckoutDraft,
 } from "@/lib/autoApplyCheckout";
 import { getAutoApplyCredits, submitAutoApplyApplications } from "@/lib/applicationsService";
+import { syncEnrollmentPayloadForApplications } from "@/lib/syncEnrollmentFromCheckout";
 import {
   createAutoApplyPaymentIntent,
   getPaymentStatus,
@@ -220,7 +221,7 @@ function StripeCheckoutForm({
       console.log("[PAYMENTS] submitAutoApplyApplications start", {
         count: draft.daycareIds.length,
       });
-      await submitAutoApplyApplications({
+      const applyRes = await submitAutoApplyApplications({
         daycareIds: draft.daycareIds,
         parentName: draft.parentName,
         parentEmail: draft.parentEmail,
@@ -229,9 +230,18 @@ function StripeCheckoutForm({
         childDob: draft.childDob,
         preferredStartDate: draft.preferredStartDate,
         specialNotes: draft.specialNotes || "",
+        enrollmentPayload: draft.enrollmentPayload,
       });
       // eslint-disable-next-line no-console
       console.log("[PAYMENTS] submitAutoApplyApplications ok");
+
+      const createdIds = applyRes.data?.createdIds?.map(String) ?? [];
+      if (draft.enrollmentPayload && createdIds.length > 0) {
+        await syncEnrollmentPayloadForApplications(
+          createdIds,
+          draft.enrollmentPayload
+        );
+      }
 
       clearAutoApplyCheckoutDraft();
       router.push("/payment/success?product=auto-apply");
@@ -398,9 +408,17 @@ export default function PaymentCheckoutPage() {
         childDob: draft.childDob,
         preferredStartDate: draft.preferredStartDate,
         specialNotes: draft.specialNotes || "",
+        enrollmentPayload: draft.enrollmentPayload,
       });
       if (!res.success) {
         throw new Error(res.error || "Unable to submit applications.");
+      }
+      const createdIds = res.data?.createdIds?.map(String) ?? [];
+      if (draft.enrollmentPayload && createdIds.length > 0) {
+        await syncEnrollmentPayloadForApplications(
+          createdIds,
+          draft.enrollmentPayload
+        );
       }
       clearAutoApplyCheckoutDraft();
       router.push("/payment/success?product=auto-apply");

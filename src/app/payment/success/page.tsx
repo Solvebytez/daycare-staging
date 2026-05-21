@@ -166,6 +166,16 @@ function PaymentSuccessPageInner() {
               <span>{isAutoApply ? "Back to Search" : "Continue Searching"}</span>
             </Link>
 
+            {isAutoApply && (
+              <div>
+                <Link
+                  href="/enrollments"
+                  className="font-medium text-indigo-600 hover:text-indigo-700"
+                >
+                  Complete daycare registrations
+                </Link>
+              </div>
+            )}
             <div>
               <Link
                 href={getDashboardUrl()}

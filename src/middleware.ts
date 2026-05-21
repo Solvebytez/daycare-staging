@@ -50,6 +50,8 @@ const protectedRoutes = [
   "/apply",
   "/payment",
   "/purchase-report",
+  "/enrollment",
+  "/enrollments",
 ];
 
 // Auth routes (login, register)

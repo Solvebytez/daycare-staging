@@ -6,7 +6,31 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { readSearchSelection } from "../lib/autoApplyPending";
 import { saveAutoApplyCheckoutDraft } from "../lib/autoApplyCheckout";
+import {
+  buildAutoApplyReviewSections,
+  buildEnrollmentPayloadFromAutoApply,
+  EMPTY_OPTIONAL_EXTRAS,
+  type AutoApplyOptionalExtras,
+} from "../lib/autoApplyEnrollmentExtras";
+import { WEEKDAYS } from "../lib/enrollmentFormUtils";
 import Navigation from "./Navigation";
+import {
+  FormCard,
+  FormField,
+  InfoBanner,
+  OptionalBlock,
+  OptCheck,
+  OptInput,
+  OptSelect,
+  DayChip,
+  SubSectionTitle,
+  StepProgress,
+  PrimaryButton,
+  OutlineButton,
+  AutoApplyReviewSummary,
+  inputRequiredClass,
+  textareaClass,
+} from "./autoApply/AutoApplyFormUI";
 import {
   getAutoApplyCredits,
   type AutoApplyCreditsResponse,
@@ -37,6 +61,7 @@ function AutoApplyThreeStepFormInner() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [extras, setExtras] = useState<AutoApplyOptionalExtras>(EMPTY_OPTIONAL_EXTRAS);
   const [selectedCount, setSelectedCount] = useState(0);
   const [selectedDaycareIds, setSelectedDaycareIds] = useState<string[]>([]);
   const [credits, setCredits] = useState<AutoApplyCreditsResponse | null>(null);
@@ -97,14 +122,11 @@ function AutoApplyThreeStepFormInner() {
     };
   }, []);
 
-  const progress = useMemo(
-    () => [
-      step >= 1 ? "bg-indigo-600" : "bg-gray-200",
-      step >= 2 ? "bg-indigo-600" : "bg-gray-200",
-      step >= 3 ? "bg-indigo-600" : "bg-gray-200",
-    ],
-    [step]
+  const reviewSections = useMemo(
+    () => buildAutoApplyReviewSections(form, extras),
+    [form, extras]
   );
+
   const creditCap = credits?.totalCredits ?? 30;
   const availableCredits = credits?.remainingCredits ?? 0;
   const isOverLimit = !isLoadingCredits && selectedCount > availableCredits;
@@ -162,6 +184,25 @@ function AutoApplyThreeStepFormInner() {
     const dd = String(parsed.getDate()).padStart(2, "0");
     // Backend accepts yyyy-mm-dd
     return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const updateExtra =
+    (key: keyof AutoApplyOptionalExtras) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const raw = e.target.type === "checkbox" ? (e.target as HTMLInputElement).checked : e.target.value;
+      setExtras((prev) => ({ ...prev, [key]: raw }));
+    };
+
+  const toggleDay = (day: string) => {
+    setExtras((prev) => {
+      const has = prev.daysRequired.includes(day);
+      return {
+        ...prev,
+        daysRequired: has
+          ? prev.daysRequired.filter((d) => d !== day)
+          : [...prev.daysRequired, day],
+      };
+    });
   };
 
   const updateField =
@@ -274,9 +315,7 @@ function AutoApplyThreeStepFormInner() {
       return;
     }
 
-    saveAutoApplyCheckoutDraft({
-      daycareIds: selectedDaycareIds,
-      selectedCount,
+    const core = {
       parentName: form.parentName.trim(),
       parentEmail: form.parentEmail.trim(),
       parentPhone: form.parentPhone.trim(),
@@ -284,6 +323,19 @@ function AutoApplyThreeStepFormInner() {
       childDob: toApiDate(form.childDob.trim()),
       preferredStartDate: toApiDate(form.preferredStartDate.trim()),
       specialNotes: form.specialNotes.trim(),
+    };
+    const enrollmentPayload = buildEnrollmentPayloadFromAutoApply(core, extras);
+    if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
+      console.info("[auto-apply] checkout draft enrollmentPayload", enrollmentPayload);
+    }
+
+    saveAutoApplyCheckoutDraft({
+      daycareIds: selectedDaycareIds,
+      selectedCount,
+      ...core,
+      optionalExtras: extras,
+      enrollmentPayload,
     });
 
     setSubmitError(null);
@@ -299,7 +351,9 @@ function AutoApplyThreeStepFormInner() {
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
               {step === 1 ? "Parent Details" : step === 2 ? "Child Info" : "Review"}
             </h1>
-            <div className={`rounded-xl border px-4 py-2 text-right ${badgeClasses}`}>
+            <div
+              className={`rounded-2xl border px-5 py-3 text-right shadow-sm ${badgeClasses}`}
+            >
               <p className="text-xs font-semibold uppercase tracking-wide">
                 Auto-Apply Credits
               </p>
@@ -312,171 +366,221 @@ function AutoApplyThreeStepFormInner() {
             </div>
           </div>
 
-          <div className="mb-8 grid grid-cols-3 gap-2">
-            {progress.map((bar, index) => (
-              <div key={index} className={`h-1.5 rounded-full ${bar}`} />
-            ))}
-          </div>
+          <StepProgress step={step} />
 
-          <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+          <FormCard>
             {step === 1 && (
-              <div className="space-y-5">
-                <label className="block">
-                  <span className="mb-2 block text-lg font-bold text-slate-900">Parent Full Name</span>
+              <div className="space-y-6">
+                <FormField label="Parent Full Name" required error={fieldErrors.parentName}>
                   <input
                     value={form.parentName}
                     onChange={updateField("parentName")}
-                    className="w-full rounded-2xl border border-gray-200 px-5 py-3 text-lg text-slate-700 outline-none focus:border-indigo-400"
+                    className={inputRequiredClass}
                     placeholder="Sarah Chen"
                   />
-                  {fieldErrors.parentName && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.parentName}</p>
-                  )}
-                </label>
+                </FormField>
 
-                <label className="block">
-                  <span className="mb-2 block text-lg font-bold text-slate-900">
-                    Gmail Address (apps sent from here)
-                  </span>
+                <FormField
+                  label="Gmail Address (apps sent from here)"
+                  required
+                  error={fieldErrors.parentEmail}
+                  hint="Applications are sent from this inbox via OAuth2."
+                >
                   <input
                     value={form.parentEmail}
                     onChange={updateField("parentEmail")}
-                    className="w-full rounded-2xl border border-gray-200 px-5 py-3 text-lg text-slate-700 outline-none focus:border-indigo-400"
+                    className={inputRequiredClass}
                     placeholder="sarah.chen.parent@gmail.com"
+                    type="email"
+                    autoComplete="email"
                   />
-                  {fieldErrors.parentEmail && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.parentEmail}</p>
-                  )}
-                </label>
+                </FormField>
 
-                <label className="block">
-                  <span className="mb-2 block text-lg font-bold text-slate-900">Phone Number</span>
+                <FormField label="Phone Number" required error={fieldErrors.parentPhone}>
                   <input
                     value={form.parentPhone}
                     onChange={updateField("parentPhone")}
-                    className="w-full rounded-2xl border border-gray-200 px-5 py-3 text-lg text-slate-700 outline-none focus:border-indigo-400"
+                    className={inputRequiredClass}
                     placeholder="(416) 555-8234"
+                    type="tel"
+                    autoComplete="tel"
                   />
-                  {fieldErrors.parentPhone && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.parentPhone}</p>
-                  )}
-                </label>
+                </FormField>
 
-                <div className="rounded-2xl bg-blue-50 px-4 py-3 text-sm text-indigo-700 sm:text-base">
+                <InfoBanner>
                   🔐 Emails originate from <strong>your Gmail inbox</strong> via OAuth2. Daycares see a
                   genuine parent inquiry.
-                </div>
+                </InfoBanner>
 
-                <button
-                  type="button"
-                  onClick={goToChildStep}
-                  className="w-full rounded-2xl bg-gradient-to-r from-violet-700 to-blue-600 py-3 text-lg font-bold text-white transition hover:opacity-95"
-                >
-                  Continue →
-                </button>
+                <OptionalBlock title="More parent details (optional)">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <OptInput label="Relationship" value={extras.parentRelationship} onChange={updateExtra("parentRelationship")} />
+                    <OptInput label="Phone type" value={extras.phoneType} onChange={updateExtra("phoneType")} />
+                  </div>
+                  <OptInput label="Street address" value={extras.addressStreet} onChange={updateExtra("addressStreet")} />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <OptInput label="City" value={extras.addressCity} onChange={updateExtra("addressCity")} />
+                    <OptInput label="Province (e.g. ON)" value={extras.addressProvince} onChange={updateExtra("addressProvince")} />
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <OptInput label="Postal code" value={extras.addressPostal} onChange={updateExtra("addressPostal")} />
+                    <OptInput label="Country" value={extras.addressCountry} onChange={updateExtra("addressCountry")} />
+                  </div>
+                  <SubSectionTitle>Employment</SubSectionTitle>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <OptInput label="Status" value={extras.employmentStatus} onChange={updateExtra("employmentStatus")} />
+                    <OptInput label="Employer" value={extras.employerName} onChange={updateExtra("employerName")} />
+                    <OptInput label="Job title" value={extras.jobTitle} onChange={updateExtra("jobTitle")} />
+                    <OptInput label="Work hours" value={extras.workHours} onChange={updateExtra("workHours")} />
+                  </div>
+                  <OptCheck
+                    label="Add second parent / guardian"
+                    checked={extras.includeSecondaryParent}
+                    onChange={updateExtra("includeSecondaryParent")}
+                  />
+                  {extras.includeSecondaryParent && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <OptInput label="First name" value={extras.secondaryFirstName} onChange={updateExtra("secondaryFirstName")} />
+                      <OptInput label="Last name" value={extras.secondaryLastName} onChange={updateExtra("secondaryLastName")} />
+                      <OptInput label="Relationship" value={extras.secondaryRelationship} onChange={updateExtra("secondaryRelationship")} />
+                      <OptInput label="Email" value={extras.secondaryEmail} onChange={updateExtra("secondaryEmail")} />
+                      <OptInput label="Phone" value={extras.secondaryPhone} onChange={updateExtra("secondaryPhone")} />
+                    </div>
+                  )}
+                  <OptSelect
+                    label="Preferred language"
+                    value={extras.preferredLanguage}
+                    onChange={updateExtra("preferredLanguage")}
+                    options={["English", "French", "Mandarin", "Other"]}
+                  />
+                </OptionalBlock>
+
+                <PrimaryButton onClick={goToChildStep}>Continue →</PrimaryButton>
               </div>
             )}
 
             {step === 2 && (
-              <div className="space-y-5">
-                <label className="block">
-                  <span className="mb-2 block text-lg font-bold text-slate-900">Child&apos;s Full Name</span>
+              <div className="space-y-6">
+                <FormField label="Child's Full Name" required error={fieldErrors.childName}>
                   <input
                     value={form.childName}
                     onChange={updateField("childName")}
-                    className="w-full rounded-2xl border border-gray-200 px-5 py-3 text-lg text-slate-700 outline-none focus:border-indigo-400"
+                    className={inputRequiredClass}
                     placeholder="Emma Chen"
                   />
-                  {fieldErrors.childName && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.childName}</p>
-                  )}
-                </label>
+                </FormField>
 
-                <label className="block">
-                  <span className="mb-2 block text-lg font-bold text-slate-900">Date of Birth</span>
+                <FormField label="Date of Birth" required error={fieldErrors.childDob} hint="Format: MM/DD/YYYY">
                   <input
                     ref={childDobRef}
                     value={form.childDob}
                     onChange={updateField("childDob")}
                     onKeyDown={handleDateKeyDown("childDob")}
-                    className="w-full rounded-2xl border border-gray-200 px-5 py-3 text-lg text-slate-700 outline-none focus:border-indigo-400"
+                    className={inputRequiredClass}
                     placeholder="MM/DD/YYYY"
                     inputMode="numeric"
                     maxLength={10}
                   />
-                  {fieldErrors.childDob && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.childDob}</p>
-                  )}
-                </label>
+                </FormField>
 
-                <label className="block">
-                  <span className="mb-2 block text-lg font-bold text-slate-900">Preferred Start Date</span>
+                <FormField
+                  label="Preferred Start Date"
+                  required
+                  error={fieldErrors.preferredStartDate}
+                  hint="Format: MM/DD/YYYY"
+                >
                   <input
                     ref={preferredStartDateRef}
                     value={form.preferredStartDate}
                     onChange={updateField("preferredStartDate")}
                     onKeyDown={handleDateKeyDown("preferredStartDate")}
-                    className="w-full rounded-2xl border border-gray-200 px-5 py-3 text-lg text-slate-700 outline-none focus:border-indigo-400"
+                    className={inputRequiredClass}
                     placeholder="MM/DD/YYYY"
                     inputMode="numeric"
                     maxLength={10}
                   />
-                  {fieldErrors.preferredStartDate && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.preferredStartDate}</p>
-                  )}
-                </label>
+                </FormField>
 
-                <label className="block">
-                  <span className="mb-2 block text-lg font-bold text-slate-900">Special Notes</span>
+                <FormField label="Special Notes">
                   <textarea
                     value={form.specialNotes}
                     onChange={updateField("specialNotes")}
-                    className="h-32 w-full resize-none rounded-2xl border border-gray-200 px-5 py-3 text-lg text-slate-700 outline-none focus:border-indigo-400"
+                    className={textareaClass}
                     placeholder="Allergies, dietary, Montessori preference..."
                   />
-                </label>
+                </FormField>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="rounded-2xl border border-gray-300 py-3 text-lg font-bold text-slate-900"
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goToReviewStep}
-                    className="rounded-2xl bg-gradient-to-r from-violet-700 to-blue-600 py-3 text-lg font-bold text-white transition hover:opacity-95"
-                  >
-                    Review →
-                  </button>
+                <OptionalBlock title="More child & enrollment details (optional)">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <OptInput label="Middle name" value={extras.childMiddleName} onChange={updateExtra("childMiddleName")} />
+                    <OptSelect
+                      label="Gender"
+                      value={extras.childGender}
+                      onChange={updateExtra("childGender")}
+                      options={["", "Male", "Female", "Non-binary", "Prefer not to say"]}
+                    />
+                    <OptInput label="Program type" value={extras.programType} onChange={updateExtra("programType")} placeholder="Preschool (2-5 years)" />
+                    <OptInput label="Schedule type" value={extras.scheduleType} onChange={updateExtra("scheduleType")} placeholder="Full Time (5 days)" />
+                  </div>
+                  <SubSectionTitle>Days needed</SubSectionTitle>
+                  <div className="flex flex-wrap gap-2">
+                    {WEEKDAYS.map((day) => (
+                      <DayChip
+                        key={day}
+                        day={day}
+                        checked={extras.daysRequired.includes(day)}
+                        onToggle={() => toggleDay(day)}
+                      />
+                    ))}
+                  </div>
+                  <OptInput label="Dietary restrictions (comma-separated)" value={extras.dietaryRestrictions} onChange={updateExtra("dietaryRestrictions")} />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <OptInput label="Curriculum preference" value={extras.curriculumType} onChange={updateExtra("curriculumType")} />
+                    <OptInput label="Languages (comma-separated)" value={extras.languageOfInstruction} onChange={updateExtra("languageOfInstruction")} />
+                    <OptInput label="Special programs (comma-separated)" value={extras.specialPrograms} onChange={updateExtra("specialPrograms")} />
+                    <OptInput label="Household size" value={extras.householdSize} onChange={updateExtra("householdSize")} />
+                    <OptInput label="Family structure" value={extras.familyStructure} onChange={updateExtra("familyStructure")} />
+                    <OptInput label="How did you hear about us?" value={extras.howHeardAboutUs} onChange={updateExtra("howHeardAboutUs")} />
+                    <OptInput label="Referral name" value={extras.referralName} onChange={updateExtra("referralName")} />
+                  </div>
+                  <SubSectionTitle>Emergency contact</SubSectionTitle>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <OptInput label="Name" value={extras.emergencyName} onChange={updateExtra("emergencyName")} />
+                    <OptInput label="Relationship" value={extras.emergencyRelationship} onChange={updateExtra("emergencyRelationship")} />
+                    <OptInput label="Phone" value={extras.emergencyPhone} onChange={updateExtra("emergencyPhone")} />
+                  </div>
+                  <OptCheck
+                    label="Authorized for pickup"
+                    checked={extras.emergencyAuthorizedPickup}
+                    onChange={updateExtra("emergencyAuthorizedPickup")}
+                  />
+                  <SubSectionTitle>Preferences & consents</SubSectionTitle>
+                  <div className="space-y-2">
+                    <OptCheck label="Photo consent (health)" checked={extras.photoConsent} onChange={updateExtra("photoConsent")} />
+                    <OptCheck label="Emergency medical treatment" checked={extras.emergencyMedicalTreatment} onChange={updateExtra("emergencyMedicalTreatment")} />
+                    <OptCheck label="Parent participation in programs" checked={extras.parentParticipation} onChange={updateExtra("parentParticipation")} />
+                    <OptCheck label="Photo release" checked={extras.photoRelease} onChange={updateExtra("photoRelease")} />
+                    <OptCheck label="Parent declaration" checked={extras.parentDeclaration} onChange={updateExtra("parentDeclaration")} />
+                    <OptCheck label="Privacy policy" checked={extras.privacyPolicy} onChange={updateExtra("privacyPolicy")} />
+                    <OptCheck label="Terms and conditions" checked={extras.termsAndConditions} onChange={updateExtra("termsAndConditions")} />
+                  </div>
+                </OptionalBlock>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <OutlineButton onClick={() => setStep(1)}>← Back</OutlineButton>
+                  <PrimaryButton onClick={goToReviewStep}>Review →</PrimaryButton>
                 </div>
               </div>
             )}
 
             {step === 3 && (
-              <div className="space-y-5">
-                <div className="rounded-3xl bg-gray-50 p-5 text-base text-slate-800 sm:text-lg">
-                  <p className="mb-2">
-                    Parent: <strong>{form.parentName || "—"}</strong>
-                  </p>
-                  <p className="mb-2">
-                    Email: <strong>{form.parentEmail || "—"}</strong>
-                  </p>
-                  <p className="mb-2">
-                    Child: <strong>{form.childName || "—"}</strong> (DOB:{" "}
-                    <strong>{form.childDob || "—"}</strong>)
-                  </p>
-                  <p className="mb-5">
-                    Start: <strong>{form.preferredStartDate || "—"}</strong>
-                  </p>
-                  <div className="rounded-2xl bg-indigo-100 px-4 py-3 font-bold text-indigo-700">
-                    Applying to {selectedCount || 0} daycares
-                  </div>
-                </div>
+              <div className="space-y-6">
+                <AutoApplyReviewSummary
+                  sections={reviewSections}
+                  selectedCount={selectedCount}
+                />
 
-                <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700 sm:text-base">
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/80 px-5 py-4 text-sm text-indigo-800 sm:text-base">
                   {isLoadingCredits ? (
                     "Loading credits..."
                   ) : (
@@ -493,25 +597,19 @@ function AutoApplyThreeStepFormInner() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="rounded-2xl border border-gray-300 py-3 text-lg font-bold text-slate-900"
-                  >
-                    ← Back
-                  </button>
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <OutlineButton onClick={() => setStep(2)}>← Back</OutlineButton>
                   <button
                     type="button"
                     onClick={handleProceedToCheckout}
-                    className="rounded-2xl bg-orange-400 py-3 text-lg font-bold text-white shadow-lg transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-2xl bg-gradient-to-r from-orange-400 to-amber-500 py-3.5 text-lg font-bold text-white shadow-lg shadow-orange-400/30 transition hover:from-orange-500 hover:to-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Proceed to Checkout →
                   </button>
                 </div>
               </div>
             )}
-          </section>
+          </FormCard>
         </div>
       </main>
 

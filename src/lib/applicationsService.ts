@@ -1,4 +1,5 @@
 import { apiClient } from "./api";
+import type { EnrollmentPayload } from "./enrollmentsService";
 
 /**
  * Applications Service
@@ -67,6 +68,8 @@ export interface SubmitAutoApplyRequest {
   childDob: string;
   preferredStartDate: string;
   specialNotes?: string;
+  /** Optional fields from 3-step form — merged into enrollment on the server */
+  enrollmentPayload?: Partial<EnrollmentPayload>;
 }
 
 export interface ApplicationsApiResponse {
@@ -185,6 +188,40 @@ export const grantAutoApplyCredits = async (payload: {
   return response.data;
 };
 
+function logAutoApplyRequest(payload: SubmitAutoApplyRequest) {
+  if (process.env.NODE_ENV !== "development") return;
+  const ep = payload.enrollmentPayload;
+  const addr =
+    ep?.primary_parent && typeof ep.primary_parent === "object"
+      ? (ep.primary_parent as { address?: Record<string, string> }).address
+      : undefined;
+  // eslint-disable-next-line no-console
+  console.info("[auto-apply] POST /api/applications/auto-apply", {
+    daycareCount: payload.daycareIds?.length ?? 0,
+    parentName: payload.parentName,
+    parentEmail: payload.parentEmail,
+    childName: payload.childName,
+    hasEnrollmentPayload: Boolean(ep && Object.keys(ep).length > 0),
+    enrollmentTopLevelKeys: ep ? Object.keys(ep) : [],
+    addressStreet: addr?.street,
+    addressCity: addr?.city,
+    jobTitle:
+      ep?.primary_parent && typeof ep.primary_parent === "object"
+        ? (ep.primary_parent as { employment?: { job_title?: string } }).employment
+            ?.job_title
+        : undefined,
+    preferredLanguage: ep?.form_metadata?.preferred_language,
+    childGender: ep?.child && typeof ep.child === "object" ? (ep.child as { gender?: string }).gender : undefined,
+    daysRequired: ep?.enrollment && typeof ep.enrollment === "object"
+      ? (ep.enrollment as { days_required?: string[] }).days_required
+      : undefined,
+    photoConsent:
+      ep?.health_and_wellness && typeof ep.health_and_wellness === "object"
+        ? (ep.health_and_wellness as { photo_consent?: boolean }).photo_consent
+        : undefined,
+  });
+}
+
 export const submitAutoApplyApplications = async (
   payload: SubmitAutoApplyRequest
 ): Promise<{
@@ -200,6 +237,7 @@ export const submitAutoApplyApplications = async (
   error?: string;
   details?: Array<{ remainingCredits?: number; creditsNeeded?: number }>;
 }> => {
+  logAutoApplyRequest(payload);
   const response = await apiClient.post<{
     success: boolean;
     data: {

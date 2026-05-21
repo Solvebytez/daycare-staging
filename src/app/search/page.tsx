@@ -32,6 +32,7 @@ import {
   readAutoApplyPending,
   clearAutoApplyPending,
   returnUrlsMatch,
+  normalizeSearchSelectionUrl,
   saveSearchSelection,
   readSearchSelection,
   clearSearchSelection,
@@ -465,10 +466,15 @@ function SearchPageContent() {
   // Hydrate auto-apply selection: post-login pending first, else sessionStorage for refresh
   useLayoutEffect(() => {
     if (!filtersInitialized || typeof window === "undefined") return;
-    const current = window.location.pathname + window.location.search;
+    const current = normalizeSearchSelectionUrl(
+      window.location.pathname + window.location.search
+    );
 
     const pending = readAutoApplyPending();
-    if (pending && returnUrlsMatch(pending.returnUrl, current)) {
+    if (
+      pending &&
+      returnUrlsMatch(normalizeSearchSelectionUrl(pending.returnUrl), current)
+    ) {
       setAutoApplySelectedIds(pending.selectedDaycareIds);
       window.setTimeout(() => clearAutoApplyPending(), 400);
       autoApplyHydratedRef.current = true;
@@ -476,11 +482,17 @@ function SearchPageContent() {
     }
 
     const stored = readSearchSelection();
-    if (stored && returnUrlsMatch(stored.returnUrl, current)) {
+    if (
+      stored &&
+      returnUrlsMatch(normalizeSearchSelectionUrl(stored.returnUrl), current)
+    ) {
       if (stored.selectedDaycareIds.length > 0) {
         setAutoApplySelectedIds(stored.selectedDaycareIds);
       }
-    } else if (stored && !returnUrlsMatch(stored.returnUrl, current)) {
+    } else if (
+      stored &&
+      !returnUrlsMatch(normalizeSearchSelectionUrl(stored.returnUrl), current)
+    ) {
       clearSearchSelection();
       setAutoApplySelectedIds([]);
     }
@@ -493,7 +505,9 @@ function SearchPageContent() {
     if (!filtersInitialized || typeof window === "undefined") return;
     if (!autoApplyHydratedRef.current) return;
 
-    const returnUrl = window.location.pathname + window.location.search;
+    const returnUrl = normalizeSearchSelectionUrl(
+      window.location.pathname + window.location.search
+    );
     if (autoApplySelectedIds.length === 0) {
       clearSearchSelection();
       return;

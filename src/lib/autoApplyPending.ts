@@ -89,6 +89,24 @@ export function clearSearchSelection(): void {
   sessionStorage.removeItem(SEARCH_SELECTION_KEY);
 }
 
+/**
+ * Search selection key: same filters = same session, ignore pagination `page`.
+ */
+export function normalizeSearchSelectionUrl(pathAndSearch: string): string {
+  try {
+    const base = "http://local.test";
+    const full = new URL(
+      pathAndSearch.startsWith("/") ? `${base}${pathAndSearch}` : pathAndSearch
+    );
+    if (full.pathname === "/search") {
+      full.searchParams.delete("page");
+    }
+    return full.pathname + (full.search ? full.search : "");
+  } catch {
+    return pathAndSearch;
+  }
+}
+
 /** Compare pathname + query (order-insensitive for search params). */
 export function returnUrlsMatch(a: string, b: string): boolean {
   try {
