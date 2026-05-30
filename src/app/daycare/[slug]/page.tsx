@@ -11,6 +11,7 @@ import {
   Users,
   Heart,
   ArrowLeft,
+  ArrowRight,
   Calendar,
   Shield,
   Award,
@@ -20,14 +21,17 @@ import {
   BookOpen,
   Palette,
   Utensils,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
+import { Toaster } from "react-hot-toast";
 import daycaresData from "../../../data/daycares.json";
 import LocationMap from "./components/LocationMap";
 import { apiClient } from "@/lib/api";
 import { formatDaycarePrice } from "../../../utils/priceFormatter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useSearchAutoApplySelection } from "@/hooks/useSearchAutoApplySelection";
 
 interface Daycare {
   id: string;
@@ -58,7 +62,15 @@ export default function DaycareDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const {
+    selectedCount,
+    toggleSelect,
+    isSelected,
+    proceedToAutoApply,
+    blockedDaycareIds,
+    backToSearchHref,
+  } = useSearchAutoApplySelection({ user, authLoading });
   const {
     favorites: apiFavorites,
     addFavorite: addFavoriteAPI,
@@ -73,6 +85,11 @@ export default function DaycareDetailPage({
     (fav) => fav.daycareId || fav.daycare?._id || fav.daycare?.id || ""
   );
   const isFavorite = daycare?.id ? favoriteIds.includes(daycare.id) : false;
+  const daycareId = daycare?.id ? String(daycare.id).trim() : "";
+  const inAutoApplySelection = daycareId ? isSelected(daycareId) : false;
+  const isAutoApplyBlocked = daycareId
+    ? blockedDaycareIds.has(daycareId)
+    : false;
 
   useEffect(() => {
     // Handle async params and fetch daycare data
@@ -265,8 +282,9 @@ export default function DaycareDetailPage({
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Link
-                href="/search"
+                href={backToSearchHref}
                 className="text-blue-600 hover:text-blue-700"
+                aria-label="Back to search results"
               >
                 <ArrowLeft className="h-6 w-6" />
               </Link>
@@ -332,14 +350,37 @@ export default function DaycareDetailPage({
                     <p className="text-gray-700 text-lg">{daycare.description}</p>
                   )}
               </div>
-              <div className="lg:ml-6 mt-4 lg:mt-0">
-                <div className="text-3xl font-bold text-green-600 mb-2">
+              <div className="mt-4 flex w-full flex-col items-center text-center lg:mt-0 lg:ml-6 lg:w-auto lg:min-w-[220px]">
+                <div className="mb-4 text-3xl font-bold text-green-600">
                   {formatDaycarePrice(daycare.price, daycare.priceString)}
                 </div>
-                {/* Contact Provider button - temporarily hidden */}
-                {/* <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                  Contact Provider
-                </button> */}
+                <button
+                  type="button"
+                  disabled={!daycareId || isAutoApplyBlocked || authLoading}
+                  onClick={() => daycareId && toggleSelect(daycareId)}
+                  className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                    inAutoApplySelection
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-orange-500 text-white hover:bg-orange-600"
+                  }`}
+                >
+                  {inAutoApplySelection ? (
+                    <>
+                      <Check className="h-4 w-4 shrink-0" aria-hidden />
+                      Added to auto apply
+                    </>
+                  ) : isAutoApplyBlocked ? (
+                    "Already applied here"
+                  ) : (
+                    "Add to auto apply"
+                  )}
+                </button>
+                {selectedCount > 0 && (
+                  <p className="mt-2 text-center text-xs text-gray-600">
+                    {selectedCount} in your list — use Auto-Apply below or go
+                    back to search
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -589,6 +630,27 @@ export default function DaycareDetailPage({
           </div>
         </div>
       </div>
+
+      {selectedCount > 0 && (
+        <div className="pointer-events-none fixed right-6 top-24 z-50">
+          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-gray-200/80 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur-md">
+            <p className="text-sm font-bold text-gray-800">
+              {selectedCount} selected
+            </p>
+            <button
+              type="button"
+              onClick={proceedToAutoApply}
+              disabled={authLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Auto-Apply
+              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Toaster position="top-center" toastOptions={{ duration: 4500 }} />
     </div>
   );
 }

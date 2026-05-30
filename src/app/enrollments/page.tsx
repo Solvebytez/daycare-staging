@@ -7,7 +7,7 @@ import Navigation from "@/components/Navigation";
 import EnrollmentStatusBadge from "@/components/enrollment/EnrollmentStatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnrollments } from "@/hooks/useEnrollments";
-import { Loader, ClipboardDocumentListIcon } from "lucide-react";
+import { Loader, ClipboardList } from "lucide-react";
 
 export default function EnrollmentsListPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -37,7 +37,7 @@ export default function EnrollmentsListPage() {
       <main className="mx-auto max-w-3xl px-4 py-8">
         <div className="flex items-start gap-3">
           <div className="rounded-xl bg-indigo-100 p-3">
-            <ClipboardDocumentListIcon className="h-8 w-8 text-indigo-600" />
+            <ClipboardList className="h-8 w-8 text-indigo-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Daycare registrations</h1>

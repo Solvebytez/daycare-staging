@@ -89,6 +89,35 @@ export function clearSearchSelection(): void {
   sessionStorage.removeItem(SEARCH_SELECTION_KEY);
 }
 
+/** Saved when navigating from /search to a daycare detail page. */
+export const LAST_SEARCH_URL_KEY = "lastSearchUrl";
+
+export function readLastSearchUrl(): string {
+  if (typeof window === "undefined") return "/search";
+  try {
+    const saved = sessionStorage.getItem(LAST_SEARCH_URL_KEY);
+    if (saved && saved.startsWith("/search")) return saved;
+  } catch {
+    /* ignore */
+  }
+  return "/search";
+}
+
+export function saveLastSearchUrl(pathAndSearch: string): void {
+  if (typeof window === "undefined") return;
+  if (!pathAndSearch.startsWith("/search")) return;
+  try {
+    sessionStorage.setItem(LAST_SEARCH_URL_KEY, pathAndSearch);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Filter context for multi-select (ignores pagination). */
+export function getSearchSelectionContextUrl(): string {
+  return normalizeSearchSelectionUrl(readLastSearchUrl());
+}
+
 /**
  * Search selection key: same filters = same session, ignore pagination `page`.
  */

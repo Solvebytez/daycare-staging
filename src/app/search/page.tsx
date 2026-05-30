@@ -33,6 +33,7 @@ import {
   clearAutoApplyPending,
   returnUrlsMatch,
   normalizeSearchSelectionUrl,
+  saveLastSearchUrl,
   saveSearchSelection,
   readSearchSelection,
   clearSearchSelection,
@@ -1495,11 +1496,7 @@ function SearchPageContent() {
     // Save current search URL to sessionStorage before navigating
     // This allows us to restore it when user clicks back
     const currentSearchUrl = window.location.pathname + window.location.search;
-    try {
-      sessionStorage.setItem("lastSearchUrl", currentSearchUrl);
-    } catch {
-      // Silent fail - will rely on browser history
-    }
+    saveLastSearchUrl(currentSearchUrl);
     // Use Next.js router to preserve browser history (v15.0.0 - use slug for SEO)
     const slug = (daycare as { slug?: string; id: string }).slug || daycare.id;
     router.push(`/daycare/${slug}`);
