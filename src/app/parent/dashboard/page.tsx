@@ -8,6 +8,10 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useContactLogs } from "@/hooks/useContactLogs";
 import { useApplications } from "@/hooks/useApplications";
 import { useEnrollments } from "@/hooks/useEnrollments";
+import {
+  enrollmentChildDisplayName,
+  enrollmentDaycareDisplayName,
+} from "@/lib/enrollmentDisplay";
 import EnrollmentStatusBadge from "@/components/enrollment/EnrollmentStatusBadge";
 import Navigation from "@/components/Navigation";
 import ContactLogDetailsModal from "@/components/ContactLogDetailsModal";
@@ -672,14 +676,21 @@ export default function ParentDashboard() {
                                   `row-${rowIdx}`
                               );
                               const enrollment = enrollmentsByAppId.get(rowKey);
+                              const displayName = enrollment
+                                ? enrollmentDaycareDisplayName(enrollment, name)
+                                : name;
+                              const displayChildName = enrollmentChildDisplayName(
+                                enrollment,
+                                childName
+                              );
 
                               return (
                                 <tr key={rowKey} className="hover:bg-gray-50">
                                   <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                                    {name}
+                                    {displayName}
                                   </td>
                                   <td className="px-6 py-4 text-sm text-gray-700">
-                                    {childName?.trim() ? childName : "—"}
+                                    {displayChildName}
                                   </td>
                                   <td className="px-6 py-4 text-sm text-gray-700">
                                     {portal || "—"}

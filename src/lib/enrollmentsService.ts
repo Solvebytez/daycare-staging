@@ -1,6 +1,16 @@
 import { apiClient } from "./api";
 
 /** n8n enrollment payload shape (partial — extended in UI) */
+/** Root fields from enrollment_form_queue (when linked). */
+export type EnrollmentFormQueueRecord = {
+  _id?: string;
+  form_metadata?: Record<string, unknown>;
+  status?: string | null;
+  child?: Record<string, unknown>;
+  primary_parent?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
 export type EnrollmentPayload = {
   form_metadata?: {
     form_id?: string;
@@ -28,7 +38,10 @@ export type EnrollmentRecord = {
   userId: string;
   daycareId: string;
   schemaVersion: string;
+  enrollmentFormQueueId?: string | null;
+  /** Registration form fields; from queue table when enrollmentFormQueueId is set. */
   payload: EnrollmentPayload;
+  formQueue?: EnrollmentFormQueueRecord | null;
   completionStatus: "not_started" | "in_progress" | "complete";
   automationStatus:
     | "not_ready"
