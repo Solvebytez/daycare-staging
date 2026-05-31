@@ -12,6 +12,7 @@ import {
   enrollmentChildDisplayName,
   enrollmentDaycareDisplayName,
 } from "@/lib/enrollmentDisplay";
+import { getEnrollmentQueueStatus } from "@/lib/enrollmentsService";
 import EnrollmentStatusBadge from "@/components/enrollment/EnrollmentStatusBadge";
 import Navigation from "@/components/Navigation";
 import ContactLogDetailsModal from "@/components/ContactLogDetailsModal";
@@ -25,6 +26,12 @@ import {
   EllipsisVerticalIcon,
   ExclamationTriangleIcon,
   BuildingOffice2Icon,
+  MapPinIcon,
+  UserIcon,
+  ArrowTopRightOnSquareIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 
 interface SavedSearch {
@@ -523,16 +530,28 @@ export default function ParentDashboard() {
                   </p>
                 </div>
 
+                {/* KPI Cards (Auto-Apply) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                   {(() => {
                     const total = autoApplyApplications.length;
-                    const responses = autoApplyApplications.filter(
-                      (a) => a.status !== "pending"
+                    const queueStatuses = autoApplyApplications.map((app) => {
+                      const appId = String(
+                        (app as { _id?: string; id?: string })._id ||
+                          (app as { id?: string }).id ||
+                          ""
+                      );
+                      const enrollment = enrollmentsByAppId.get(appId);
+                      return enrollment
+                        ? getEnrollmentQueueStatus(enrollment)
+                        : "not_started";
+                    });
+                    const submitted = queueStatuses.filter((s) => s === "submitted").length;
+                    const submitting = queueStatuses.filter(
+                      (s) => s === "pending_automation" || s === "running"
                     ).length;
-                    const followUps = 0;
-                    const viewed = 0;
-                    const pending = autoApplyApplications.filter(
-                      (a) => a.status === "pending"
+                    const failed = queueStatuses.filter((s) => s === "failed").length;
+                    const draft = queueStatuses.filter(
+                      (s) => s === "draft" || s === "not_started"
                     ).length;
                     const cards = [
                       {
@@ -542,26 +561,26 @@ export default function ParentDashboard() {
                         text: "text-violet-700",
                       },
                       {
-                        label: "Responses",
-                        value: responses,
+                        label: "Submitted",
+                        value: submitted,
                         bg: "bg-emerald-50",
                         text: "text-emerald-700",
                       },
                       {
-                        label: "Follow-Ups",
-                        value: followUps,
-                        bg: "bg-amber-50",
-                        text: "text-amber-700",
+                        label: "Submitting",
+                        value: submitting,
+                        bg: "bg-blue-50",
+                        text: "text-blue-700",
                       },
                       {
-                        label: "Viewed",
-                        value: viewed,
-                        bg: "bg-fuchsia-50",
-                        text: "text-fuchsia-700",
+                        label: "Failed",
+                        value: failed,
+                        bg: "bg-red-50",
+                        text: "text-red-700",
                       },
                       {
-                        label: "Pending",
-                        value: pending,
+                        label: "Draft",
+                        value: draft,
                         bg: "bg-slate-50",
                         text: "text-slate-700",
                       },
@@ -578,70 +597,150 @@ export default function ParentDashboard() {
                   })()}
                 </div>
 
+                {/* Auto-apply (credit) daycares */}
                 <div className="mb-8">
-                  <div className="flex items-end justify-between gap-4 mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Purchased Credits Usage
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        Daycares you submitted via Auto-Apply (uses 1 credit each).
+                      <h2 className="text-lg font-semibold text-gray-900">Your submissions</h2>
+                      <p className="text-sm text-gray-500 mt-0.5">
+                        Auto-Apply daycares — 1 credit per submission
                       </p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <Link
-                        href="/enrollments"
-                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-                      >
-                        Registrations
-                      </Link>
-                      <Link
-                        href="/search"
-                        className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-                      >
-                        Find more
-                      </Link>
-                    </div>
+                    <Link
+                      href="/search"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      Find more daycares
+                    </Link>
                   </div>
 
                   {autoApplyApplications.length === 0 ? (
-                    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                      <p className="text-gray-700 font-medium">No auto-apply submissions yet.</p>
-                      <p className="text-sm text-gray-500 mt-1">
+                    <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50/80 p-10 text-center">
+                      <BuildingOffice2Icon className="mx-auto h-10 w-10 text-gray-400" />
+                      <p className="mt-3 text-gray-800 font-medium">No auto-apply submissions yet</p>
+                      <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
                         After you use Auto-Apply, your submitted daycares will appear here.
                       </p>
+                      <Link
+                        href="/search"
+                        className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                      >
+                        Browse daycares
+                        <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                      </Link>
                     </div>
                   ) : (
-                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                      <div className="overflow-x-auto">
+                    <div className="rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden">
+                      {/* Mobile cards */}
+                      <div className="md:hidden divide-y divide-gray-100">
+                        {myDaycaresPagedApps.map((app, rowIdx) => {
+                          const daycare = app.daycare || null;
+                          const daycareId = (daycare?._id || daycare?.id || app.daycareId) as
+                            | string
+                            | undefined;
+                          const name = (daycare?.name as string | undefined) || "KinderBridge";
+                          const childName =
+                            (app as unknown as { childName?: string }).childName || "";
+                          const city = (daycare?.city as string | undefined) || "";
+                          const responseMessage =
+                            (app as unknown as { responseMessage?: string }).responseMessage || "";
+                          const submitted = app.createdAt
+                            ? new Date(app.createdAt).toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "—";
+                          const rowKey = String(
+                            (app as { _id?: string; id?: string })._id ||
+                              (app as { id?: string }).id ||
+                              daycareId ||
+                              `row-${rowIdx}`
+                          );
+                          const enrollment = enrollmentsByAppId.get(rowKey);
+                          const displayName = enrollment
+                            ? enrollmentDaycareDisplayName(enrollment, name)
+                            : name;
+                          const displayChildName = enrollmentChildDisplayName(
+                            enrollment,
+                            childName
+                          );
+                          const initial = displayName.charAt(0).toUpperCase();
+
+                          return (
+                            <div key={rowKey} className="p-4 space-y-3">
+                              <div className="flex items-start gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-sm font-bold text-indigo-700">
+                                  {initial}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-semibold text-gray-900 leading-snug">{displayName}</p>
+                                  {city ? (
+                                    <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
+                                      <MapPinIcon className="h-3.5 w-3.5 shrink-0" />
+                                      {city}
+                                    </p>
+                                  ) : null}
+                                </div>
+                                {enrollment ? (
+                                  <EnrollmentStatusBadge record={enrollment} />
+                                ) : (
+                                  <span className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
+                                    Not started
+                                  </span>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="rounded-lg bg-gray-50 px-3 py-2">
+                                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-medium">Child</p>
+                                  <p className="text-gray-800 font-medium truncate">{displayChildName || "—"}</p>
+                                </div>
+                                <div className="rounded-lg bg-gray-50 px-3 py-2">
+                                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-medium">Submitted</p>
+                                  <p className="text-gray-800 font-medium">{submitted}</p>
+                                </div>
+                              </div>
+                              {responseMessage ? (
+                                <p className="text-sm text-gray-600 line-clamp-2">{responseMessage}</p>
+                              ) : (
+                                <p className="text-xs text-gray-400 italic">Awaiting response</p>
+                              )}
+                              {daycareId ? (
+                                <Link
+                                  href={`/daycare/${String(daycareId)}`}
+                                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                                >
+                                  View daycare
+                                  <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                                </Link>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Desktop table */}
+                      <div className="hidden md:block overflow-x-auto">
                         <table className="min-w-full">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          <thead>
+                            <tr className="border-b border-gray-200 bg-slate-50/90">
+                              <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Daycare
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                              <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Child
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Portal
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                City
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Registration
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                              <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Status
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Response Message
+                              <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 min-w-[12rem]">
+                                Response
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                              <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap">
                                 Submitted
                               </th>
-                              <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                              <th className="px-5 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                 Action
                               </th>
                             </tr>
@@ -649,19 +748,15 @@ export default function ParentDashboard() {
                           <tbody className="divide-y divide-gray-100">
                             {myDaycaresPagedApps.map((app, rowIdx) => {
                               const daycare = app.daycare || null;
-                              const daycareId = (daycare?._id ||
-                                daycare?.id ||
-                                app.daycareId) as string | undefined;
-                              const name =
-                                (daycare?.name as string | undefined) || "KinderBridge";
+                              const daycareId = (daycare?._id || daycare?.id || app.daycareId) as
+                                | string
+                                | undefined;
+                              const name = (daycare?.name as string | undefined) || "KinderBridge";
                               const childName =
                                 (app as unknown as { childName?: string }).childName || "";
-                              const portal =
-                                (app as unknown as { portal?: string }).portal || "";
-                              const city = (daycare?.city as string | undefined) || "—";
+                              const city = (daycare?.city as string | undefined) || "";
                               const responseMessage =
-                                (app as unknown as { responseMessage?: string })
-                                  .responseMessage || "";
+                                (app as unknown as { responseMessage?: string }).responseMessage || "";
                               const submitted = app.createdAt
                                 ? new Date(app.createdAt).toLocaleDateString(undefined, {
                                     month: "short",
@@ -683,61 +778,70 @@ export default function ParentDashboard() {
                                 enrollment,
                                 childName
                               );
+                              const initial = displayName.charAt(0).toUpperCase();
 
                               return (
-                                <tr key={rowKey} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                                    {displayName}
+                                <tr
+                                  key={rowKey}
+                                  className="group transition-colors hover:bg-indigo-50/30"
+                                >
+                                  <td className="px-5 py-4">
+                                    <div className="flex items-center gap-3 min-w-[14rem]">
+                                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-sm font-bold text-indigo-700 group-hover:bg-indigo-100">
+                                        {initial}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">
+                                          {displayName}
+                                        </p>
+                                        {city ? (
+                                          <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
+                                            <MapPinIcon className="h-3.5 w-3.5 shrink-0" />
+                                            {city}
+                                          </p>
+                                        ) : null}
+                                      </div>
+                                    </div>
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-gray-700">
-                                    {displayChildName}
+                                  <td className="px-5 py-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                                      <UserIcon className="h-4 w-4 text-gray-400 shrink-0" />
+                                      <span className="font-medium">{displayChildName || "—"}</span>
+                                    </div>
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-gray-700">
-                                    {portal || "—"}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-600">{city}</td>
-                                  <td className="px-6 py-4 text-sm">
+                                  <td className="px-5 py-4 whitespace-nowrap">
                                     {enrollment ? (
                                       <EnrollmentStatusBadge record={enrollment} />
                                     ) : (
-                                      <Link
-                                        href={`/enrollment/${rowKey}`}
-                                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
-                                      >
-                                        Start form
-                                      </Link>
+                                      <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
+                                        Not started
+                                      </span>
                                     )}
                                   </td>
-                                  <td className="px-6 py-4 text-sm">
-                                    <span
-                                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusColor(
-                                        app.status
-                                      )}`}
-                                    >
-                                      {getStatusText(app.status)}
-                                    </span>
+                                  <td className="px-5 py-4 max-w-xs">
+                                    {responseMessage ? (
+                                      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                                        {responseMessage}
+                                      </p>
+                                    ) : (
+                                      <span className="text-xs text-gray-400 italic">Awaiting response</span>
+                                    )}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-gray-700 max-w-[28rem]">
-                                    <span className="line-clamp-2">
-                                      {responseMessage || "—"}
-                                    </span>
+                                  <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap tabular-nums">
+                                    {submitted}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-gray-600">{submitted}</td>
-                                  <td className="px-6 py-4 text-right space-x-3">
-                                    <Link
-                                      href={`/enrollment/${rowKey}`}
-                                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-                                    >
-                                      Registration
-                                    </Link>
+                                  <td className="px-5 py-4 text-right whitespace-nowrap">
                                     {daycareId ? (
                                       <Link
                                         href={`/daycare/${String(daycareId)}`}
-                                        className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                                        className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
                                       >
                                         View
+                                        <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
                                       </Link>
-                                    ) : null}
+                                    ) : (
+                                      <span className="text-sm text-gray-400">—</span>
+                                    )}
                                   </td>
                                 </tr>
                               );
@@ -746,23 +850,20 @@ export default function ParentDashboard() {
                         </table>
                       </div>
 
-                      <div className="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-3">
+                      <div className="flex flex-col gap-3 border-t border-gray-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap items-center gap-3">
                           <p className="text-sm text-gray-600">
                             Page{" "}
-                            <span className="font-semibold text-gray-900">{myDaycaresPage}</span> of{" "}
-                            <span className="font-semibold text-gray-900">
-                              {myDaycaresTotalPages}
-                            </span>
+                            <span className="font-semibold text-gray-900">{myDaycaresPage}</span>
+                            {" "}of{" "}
+                            <span className="font-semibold text-gray-900">{myDaycaresTotalPages}</span>
                           </p>
                           <label className="flex items-center gap-2 text-sm text-gray-600">
                             Rows
                             <select
                               value={myDaycaresPageSize}
-                              onChange={(e) =>
-                                setMyDaycaresPageSize(Number(e.target.value) || 10)
-                              }
-                              className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
+                              onChange={(e) => setMyDaycaresPageSize(Number(e.target.value) || 10)}
+                              className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                             >
                               <option value={5}>5</option>
                               <option value={10}>10</option>
@@ -777,21 +878,21 @@ export default function ParentDashboard() {
                             type="button"
                             onClick={() => setMyDaycaresPage((p) => Math.max(1, p - 1))}
                             disabled={myDaycaresPage <= 1}
-                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
                           >
+                            <ChevronLeftIcon className="h-4 w-4" />
                             Prev
                           </button>
                           <button
                             type="button"
                             onClick={() =>
-                              setMyDaycaresPage((p) =>
-                                Math.min(myDaycaresTotalPages, p + 1)
-                              )
+                              setMyDaycaresPage((p) => Math.min(myDaycaresTotalPages, p + 1))
                             }
                             disabled={myDaycaresPage >= myDaycaresTotalPages}
-                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
                           >
                             Next
+                            <ChevronRightIcon className="h-4 w-4" />
                           </button>
                         </div>
                       </div>

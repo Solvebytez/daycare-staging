@@ -18,6 +18,10 @@ export type EnrollmentPayload = {
     form_url?: string;
     submission_date?: string | null;
     preferred_language?: string;
+    daycare_id?: string;
+    daycare_name?: string;
+    city?: string;
+    region?: string;
   };
   status?: string;
   child?: Record<string, unknown>;
@@ -42,6 +46,8 @@ export type EnrollmentRecord = {
   /** Registration form fields; from queue table when enrollmentFormQueueId is set. */
   payload: EnrollmentPayload;
   formQueue?: EnrollmentFormQueueRecord | null;
+  /** Raw status from enrollment_form_queue when linked */
+  queueStatus?: string | null;
   completionStatus: "not_started" | "in_progress" | "complete";
   automationStatus:
     | "not_ready"
@@ -123,13 +129,41 @@ export const queueEnrollmentAutomation = async (enrollmentId: string) => {
   return res.data;
 };
 
-export function enrollmentStatusLabel(record: EnrollmentRecord): string {
-  if (record.automationStatus === "submitted") return "Submitted to daycare";
-  if (record.automationStatus === "failed") return "Submission failed";
-  if (record.automationStatus === "queued" || record.automationStatus === "running") {
-    return "Submitting…";
+/** Status from enrollment_form_queue only (not application or completionStatus). */
+export function getEnrollmentQueueStatus(record: EnrollmentRecord): string {
+  if (!record.enrollmentFormQueueId) {
+    return "not_started";
   }
-  if (record.completionStatus === "complete") return "Ready to submit";
-  if (record.completionStatus === "in_progress") return "Registration incomplete";
-  return "Not started";
+  const qs =
+    record.queueStatus ??
+    record.formQueue?.status ??
+    record.payload?.status;
+  return String(qs ?? "draft").trim().toLowerCase() || "draft";
+}
+
+/** Registration badge label from enrollment_form_queue.status */
+export function enrollmentStatusLabelFromQueue(
+  queueStatus: string | null | undefined
+): string {
+  const s = String(queueStatus ?? "draft").trim().toLowerCase();
+  switch (s) {
+    case "submitted":
+      return "Submitted to daycare";
+    case "failed":
+      return "Submission failed";
+    case "pending_automation":
+      return "Submitting…";
+    case "running":
+      return "Submitting…";
+    case "draft":
+      return "Draft";
+    case "not_started":
+      return "Not started";
+    default:
+      return String(queueStatus).trim() || "Draft";
+  }
+}
+
+export function enrollmentStatusLabel(record: EnrollmentRecord): string {
+  return enrollmentStatusLabelFromQueue(getEnrollmentQueueStatus(record));
 }
