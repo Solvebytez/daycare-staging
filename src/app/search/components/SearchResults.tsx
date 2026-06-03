@@ -70,6 +70,8 @@ interface SearchResultsProps {
   /** Daycare IDs where the user already bought the full report (or similar). */
   purchasedReportDaycareIds?: ReadonlySet<string>;
   onToggleAutoApplySelect: (id: string) => void;
+  showAutoApplyOnly: boolean;
+  onShowAutoApplyOnlyChange: (value: boolean) => void;
 }
 
 const EMPTY_BLOCKED = new Set<string>();
@@ -100,6 +102,8 @@ export default function SearchResults({
   autoApplyBlockedDaycareIds,
   purchasedReportDaycareIds,
   onToggleAutoApplySelect,
+  showAutoApplyOnly,
+  onShowAutoApplyOnlyChange,
 }: SearchResultsProps) {
   const blockedIds = autoApplyBlockedDaycareIds ?? EMPTY_BLOCKED;
   const purchasedReportIds =
@@ -128,15 +132,15 @@ export default function SearchResults({
         </div>
       ) : (
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                 <Search className="h-5 w-5 text-green-600" />
               </div>
               <h2 className="text-xl font-bold text-gray-900">
                 Search Results
               </h2>
-              <div className="flex items-center gap-2 ml-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setViewMode("list")}
                   className={`p-2 rounded-lg transition-all duration-200 ${
@@ -159,6 +163,17 @@ export default function SearchResults({
                 >
                   <Map className="h-5 w-5" />
                 </button>
+                <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5">
+                  <input
+                    type="checkbox"
+                    checked={showAutoApplyOnly}
+                    onChange={(e) => onShowAutoApplyOnlyChange(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                  />
+                  <span className="text-xs sm:text-sm font-medium text-orange-900 whitespace-nowrap">
+                    Auto-apply only
+                  </span>
+                </label>
               </div>
             </div>
             <div className="text-right">

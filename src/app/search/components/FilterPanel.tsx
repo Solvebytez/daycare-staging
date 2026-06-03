@@ -40,6 +40,8 @@ interface FilterPanelProps {
   setCwelccParticipating: (value: boolean) => void;
   acceptsSubsidy: boolean;
   setAcceptsSubsidy: (value: boolean) => void;
+  showAutoApplyOnly: boolean;
+  setShowAutoApplyOnly: (value: boolean) => void;
   sortBy: string;
   setSortBy: (value: string) => void;
   sortOrder: string;
@@ -99,6 +101,8 @@ export default function FilterPanel({
   setCwelccParticipating,
   acceptsSubsidy,
   setAcceptsSubsidy,
+  showAutoApplyOnly,
+  setShowAutoApplyOnly,
   sortBy,
   setSortBy,
   sortOrder,
@@ -422,6 +426,17 @@ export default function FilterPanel({
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <span className="text-sm text-gray-700">Accepts subsidy</span>
+            </label>
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showAutoApplyOnly}
+                onChange={(e) => setShowAutoApplyOnly(e.target.checked)}
+                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+              />
+              <span className="text-sm text-gray-700">
+                Show auto-apply daycares only
+              </span>
             </label>
           </div>
         </div>

@@ -89,6 +89,7 @@ function SearchPageContent() {
   const [selectedWard, setSelectedWard] = useState("");
   const [cwelccParticipating, setCwelccParticipating] = useState(false);
   const [acceptsSubsidy, setAcceptsSubsidy] = useState(false);
+  const [showAutoApplyOnly, setShowAutoApplyOnly] = useState(false);
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
   const [favoriteLoadingId, setFavoriteLoadingId] = useState<string | null>(
@@ -158,6 +159,7 @@ function SearchPageContent() {
     selectedWard: "",
     cwelccParticipating: false,
     acceptsSubsidy: false,
+    showAutoApplyOnly: false,
     sortBy: "name",
     sortOrder: "asc",
   });
@@ -185,6 +187,7 @@ function SearchPageContent() {
     if (selectedWard) currentParams.set("ward", selectedWard);
     if (cwelccParticipating) currentParams.set("cwelcc", "true");
     if (acceptsSubsidy) currentParams.set("subsidy", "true");
+    if (showAutoApplyOnly) currentParams.set("autoApplyOnly", "true");
     if (sortBy !== "name") currentParams.set("sortBy", sortBy);
     if (sortOrder !== "asc") currentParams.set("sortOrder", sortOrder);
     if (currentPage > 1) currentParams.set("page", currentPage.toString());
@@ -280,6 +283,11 @@ function SearchPageContent() {
     const subsidy = params.get("subsidy") === "true";
     if (subsidy !== acceptsSubsidy) {
       setAcceptsSubsidy(subsidy);
+    }
+
+    const autoApplyOnly = params.get("autoApplyOnly") === "true";
+    if (autoApplyOnly !== showAutoApplyOnly) {
+      setShowAutoApplyOnly(autoApplyOnly);
     }
     
     // Sync sort
@@ -390,6 +398,9 @@ function SearchPageContent() {
     const subsidy = params.get("subsidy");
     const subsidyValue = subsidy === "true";
     setAcceptsSubsidy(subsidyValue);
+
+    const autoApplyOnly = params.get("autoApplyOnly");
+    setShowAutoApplyOnly(autoApplyOnly === "true");
     
     // Read sort
     const sortByParam = params.get("sortBy");
@@ -567,6 +578,7 @@ function SearchPageContent() {
       selectedWard,
       cwelccParticipating,
       acceptsSubsidy,
+      showAutoApplyOnly,
       sortBy,
       sortOrder,
     };
@@ -582,6 +594,7 @@ function SearchPageContent() {
       prevFiltersRef.current.selectedWard !== currentFilters.selectedWard ||
       prevFiltersRef.current.cwelccParticipating !== currentFilters.cwelccParticipating ||
       prevFiltersRef.current.acceptsSubsidy !== currentFilters.acceptsSubsidy ||
+      prevFiltersRef.current.showAutoApplyOnly !== currentFilters.showAutoApplyOnly ||
       prevFiltersRef.current.sortBy !== currentFilters.sortBy ||
       prevFiltersRef.current.sortOrder !== currentFilters.sortOrder;
     
@@ -602,6 +615,7 @@ function SearchPageContent() {
     selectedWard,
     cwelccParticipating,
     acceptsSubsidy,
+    showAutoApplyOnly,
     sortBy,
     sortOrder,
     currentPage,
@@ -656,6 +670,10 @@ function SearchPageContent() {
     if (acceptsSubsidy) {
       params.set("subsidy", "true");
     }
+
+    if (showAutoApplyOnly) {
+      params.set("autoApplyOnly", "true");
+    }
     
     // Add sort (only if not default)
     if (sortBy !== "name") {
@@ -709,6 +727,7 @@ function SearchPageContent() {
     selectedWard,
     cwelccParticipating,
     acceptsSubsidy,
+    showAutoApplyOnly,
     sortBy,
     sortOrder,
     currentPage,
@@ -762,6 +781,7 @@ function SearchPageContent() {
     selectedWard,
     cwelccParticipating,
     acceptsSubsidy,
+    showAutoApplyOnly,
     sortBy,
     sortOrder,
   ]);
@@ -841,6 +861,10 @@ function SearchPageContent() {
       params.subsidy = "true";
     }
 
+    if (showAutoApplyOnly) {
+      params.autoApplyOnly = "true";
+    }
+
     return params;
   }, [
     currentPage,
@@ -854,6 +878,7 @@ function SearchPageContent() {
     selectedWard,
     cwelccParticipating,
     acceptsSubsidy,
+    showAutoApplyOnly,
     escapeRegex,
   ]);
 
@@ -918,6 +943,10 @@ function SearchPageContent() {
       params.subsidy = "true";
     }
 
+    if (showAutoApplyOnly) {
+      params.autoApplyOnly = "true";
+    }
+
     return params;
   }, [
     debouncedSearchQuery,
@@ -929,6 +958,7 @@ function SearchPageContent() {
     selectedWard,
     cwelccParticipating,
     acceptsSubsidy,
+    showAutoApplyOnly,
     escapeRegex,
   ]);
 
@@ -1721,6 +1751,8 @@ function SearchPageContent() {
                 setCwelccParticipating={setCwelccParticipating}
                 acceptsSubsidy={acceptsSubsidy}
                 setAcceptsSubsidy={setAcceptsSubsidy}
+                showAutoApplyOnly={showAutoApplyOnly}
+                setShowAutoApplyOnly={setShowAutoApplyOnly}
                 sortBy={sortBy}
                 setSortBy={setSortBy}
                 sortOrder={sortOrder}
@@ -1761,6 +1793,8 @@ function SearchPageContent() {
               autoApplyBlockedDaycareIds={blockedAutoApplyDaycareIds}
               purchasedReportDaycareIds={purchasedReportDaycareIds}
               onToggleAutoApplySelect={toggleAutoApplySelect}
+              showAutoApplyOnly={showAutoApplyOnly}
+              onShowAutoApplyOnlyChange={setShowAutoApplyOnly}
             />
           </div>
         </div>
