@@ -14,14 +14,8 @@ import Navigation from "@/components/Navigation";
 import { Lock, CheckCircle, XCircle, Loader } from "lucide-react";
 import { apiClient } from "@/lib/api";
 
-// Hardcoded Stripe key (env vars not loading properly)
 const stripePublishableKey =
-  "pk_test_51SUWx8AkdOFgzmtztnYWIRiiTWrseZeU4h8ZDP9NVzNwbcwDHSb2UpErbuoJpgDFoNuqqKMzhdDOfPqrCbXYMIBu000LQEDlz6";
-
-console.log(
-  "✅ Stripe key hardcoded:",
-  stripePublishableKey.substring(0, 20) + "..."
-);
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() ?? "";
 
 // Only initialize Stripe if key exists
 let stripePromise: ReturnType<typeof loadStripe> | null = null;

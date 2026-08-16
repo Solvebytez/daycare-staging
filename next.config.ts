@@ -1,11 +1,4 @@
 import type { NextConfig } from "next";
-import { readEnvVarFromDisk, readPublishableKeyFromDisk } from "./next-env-stripe";
-
-const stripePublishableKey =
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() ||
-  process.env.STRIPE_PUBLISHABLE_KEY?.trim() ||
-  readPublishableKeyFromDisk();
-const apiUrl = readEnvVarFromDisk("NEXT_PUBLIC_API_URL");
 
 const nextConfig: NextConfig = {
   // Use server-side rendering for dynamic routes
@@ -16,7 +9,7 @@ const nextConfig: NextConfig = {
   },
   // Performance optimizations
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion']
+    optimizePackageImports: ['framer-motion']
   },
   // Enable compression
   compress: true,
@@ -25,14 +18,6 @@ const nextConfig: NextConfig = {
   // Disable server-side features for static export
   skipTrailingSlashRedirect: true,
   skipMiddlewareUrlNormalize: true,
-
-  // Ensure NEXT_PUBLIC_* is available even when dotenv injection to Route Handlers fails
-  env: {
-    ...(stripePublishableKey
-      ? { NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: stripePublishableKey }
-      : {}),
-    ...(apiUrl ? { NEXT_PUBLIC_API_URL: apiUrl } : {}),
-  },
 };
 
 export default nextConfig;
