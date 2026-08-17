@@ -39,12 +39,14 @@ const publicRoutes = [
   "/api",
 ];
 
-// Protected routes that require authentication
+// Protected routes that require authentication.
+// Match `/parent` and `/parent/...` but NOT `/parent-details`.
 const protectedRoutes = [
   "/dashboard",
   "/profile",
   "/favorites",
   "/parent",
+  "/parent-details",
   "/provider",
   "/employer",
   "/apply",
@@ -79,6 +81,29 @@ function redirectPathPreservingQuery(request: NextRequest): string {
   return u.pathname + u.search;
 }
 
+function pathMatchesRoute(pathname: string, route: string): boolean {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
+function pathMatchesAny(pathname: string, routes: string[]): boolean {
+  return routes.some((route) => pathMatchesRoute(pathname, route));
+}
+
+function safeRelativeRedirect(raw: string | null): string | null {
+  if (!raw) return null;
+  try {
+    const decoded = decodeURIComponent(raw);
+    if (!decoded.startsWith("/") || decoded.startsWith("//")) return null;
+    if (decoded.startsWith("/login") || decoded.startsWith("/register")) {
+      return null;
+    }
+    const parsed = new URL(decoded, "https://www.kinderbridge.ca");
+    return parsed.pathname + parsed.search;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Handle role-based redirects based on user type
  */
@@ -92,13 +117,17 @@ function handleUserTypeRedirect(
     // Parent can access parent routes
     const parentRoutes = [
       "/parent",
+      "/parent-details",
       "/favorites",
       "/profile",
       "/search",
       "/payment",
       "/purchase-report",
+      "/apply",
+      "/enrollment",
+      "/enrollments",
     ];
-    if (!parentRoutes.some((route) => pathname.startsWith(route))) {
+    if (!pathMatchesAny(pathname, parentRoutes)) {
       console.log(`🚫 Access denied: PARENT cannot access ${pathname}`);
       const redirectUrl = new URL("/parent/dashboard", request.url);
       // Preserve query parameters from original request
@@ -111,7 +140,7 @@ function handleUserTypeRedirect(
   } else if (userType === "provider") {
     // Provider can access provider routes
     const providerRoutes = ["/provider", "/profile", "/search"];
-    if (!providerRoutes.some((route) => pathname.startsWith(route))) {
+    if (!pathMatchesAny(pathname, providerRoutes)) {
       console.log(`🚫 Access denied: PROVIDER cannot access ${pathname}`);
       const redirectUrl = new URL("/provider/dashboard", request.url);
       // Preserve query parameters from original request
@@ -124,7 +153,7 @@ function handleUserTypeRedirect(
   } else if (userType === "employer" || userType === "employee") {
     // Employer/Employee can access employer routes
     const employerRoutes = ["/employer", "/profile", "/dashboard"];
-    if (!employerRoutes.some((route) => pathname.startsWith(route))) {
+    if (!pathMatchesAny(pathname, employerRoutes)) {
       console.log(
         `🚫 Access denied: ${userType.toUpperCase()} cannot access ${pathname}`
       );
@@ -255,23 +284,34 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
 
   /**
-   * Localhost dev against a remote API:
-   * - Auth cookies are stored on the API domain (e.g. onrender.com / api.kinderbridge.ca)
-   * - Next.js middleware runs on the frontend domain (localhost) and cannot read API-domain cookies
-   * Result: infinite redirect loop to /login even though API requests are authenticated.
-   *
-   * So when on localhost and NEXT_PUBLIC_API_URL points to a non-localhost HTTPS API,
-   * we skip route protection in middleware and let client-side auth handle it.
+   * Auth cookies may live on the API host (api.kinderbridge.ca) rather than this
+   * frontend host until COOKIE_DOMAIN=.kinderbridge.ca is deployed. Middleware
+   * cannot read those cookies, which caused /login ↔ /parent-details loops.
+   * Skip edge redirects when this request has no cookies AND the API is another host.
    */
   const host = request.nextUrl.hostname;
   const apiUrlForMiddleware = getApiBaseUrl();
+  let apiHostname = "";
+  try {
+    apiHostname = new URL(apiUrlForMiddleware).hostname;
+  } catch {
+    apiHostname = "";
+  }
   const isLocalhostFrontend =
     host === "localhost" || host === "127.0.0.1" || host === "::1";
   const isRemoteHttpsApi =
     apiUrlForMiddleware.startsWith("https://") &&
     !apiUrlForMiddleware.includes("localhost") &&
     !apiUrlForMiddleware.includes("127.0.0.1");
+  const cookiesOnDifferentHost =
+    Boolean(apiHostname) && host !== apiHostname && !refreshToken;
   const skipMiddlewareAuthForRemoteApi = isLocalhostFrontend && isRemoteHttpsApi;
+  const skipProtectedEdgeAuth =
+    skipMiddlewareAuthForRemoteApi ||
+    (isRemoteHttpsApi &&
+      cookiesOnDifferentHost &&
+      (pathMatchesRoute(pathname, "/parent-details") ||
+        pathMatchesRoute(pathname, "/apply")));
 
   console.log("🔍 Middleware Debug:");
   console.log("  pathname:", pathname);
@@ -280,6 +320,10 @@ export async function middleware(request: NextRequest) {
   if (skipMiddlewareAuthForRemoteApi) {
     console.log(
       "🧪 Localhost + remote API detected: skipping middleware auth redirects"
+    );
+  } else if (skipProtectedEdgeAuth) {
+    console.log(
+      "🧪 Frontend host cannot see API cookies yet; skipping auto-apply edge redirect"
     );
   }
 
@@ -295,10 +339,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // 1. Handle protected routes
-  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
+  if (pathMatchesAny(pathname, protectedRoutes)) {
     console.log("🛡️ Protected route detected, checking authentication...");
 
-    if (skipMiddlewareAuthForRemoteApi) {
+    if (skipProtectedEdgeAuth) {
       return NextResponse.next();
     }
 
@@ -492,7 +536,7 @@ export async function middleware(request: NextRequest) {
 
   // 2. Handle auth routes (login, register)
   // If user is already authenticated, redirect them to /search
-  if (authRoutes.some((route) => pathname.startsWith(route))) {
+  if (pathMatchesAny(pathname, authRoutes)) {
     console.log("🔐 Auth route detected");
 
     // If user has refreshToken, check if they're authenticated
@@ -513,15 +557,15 @@ export async function middleware(request: NextRequest) {
           }
         }
 
-        // If we have valid cached user data, redirect to /search
         if (cachedData && cachedData.expires > now) {
           const userType = cachedData.data?.data?.user?.userType;
           const userEmail = cachedData.data?.data?.user?.email;
           if (userType && userEmail) {
-            console.log(
-              "✅ User already authenticated, redirecting to /search"
-            );
-            return NextResponse.redirect(new URL("/search", request.url));
+            const dest =
+              safeRelativeRedirect(request.nextUrl.searchParams.get("redirect")) ||
+              "/search";
+            console.log("✅ User already authenticated, redirecting to", dest);
+            return NextResponse.redirect(new URL(dest, request.url));
           }
         }
 
@@ -576,7 +620,11 @@ export async function middleware(request: NextRequest) {
               const userEmail = refreshData.data?.user?.email;
 
               if (userType && userEmail) {
-                console.log("✅ User authenticated, redirecting to /search");
+                const dest =
+                  safeRelativeRedirect(
+                    request.nextUrl.searchParams.get("redirect")
+                  ) || "/search";
+                console.log("✅ User authenticated, redirecting to", dest);
 
                 // Cache the response
                 const userId =
@@ -587,9 +635,8 @@ export async function middleware(request: NextRequest) {
                   expires: now + TOKEN_CACHE_MS,
                 });
 
-                // Redirect to /search
                 const redirectResponse = NextResponse.redirect(
-                  new URL("/search", request.url)
+                  new URL(dest, request.url)
                 );
 
                 // Forward cookies from backend
@@ -636,7 +683,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Allow public routes
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+  if (pathMatchesAny(pathname, publicRoutes)) {
     return NextResponse.next();
   }
 

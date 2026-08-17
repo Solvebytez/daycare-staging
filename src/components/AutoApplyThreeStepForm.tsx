@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
-import { readSearchSelection } from "../lib/autoApplyPending";
+import { readSearchSelection, clearAutoApplyPending } from "../lib/autoApplyPending";
 import { saveAutoApplyCheckoutDraft } from "../lib/autoApplyCheckout";
 import {
   buildAutoApplyReviewSections,
@@ -13,6 +13,7 @@ import {
   type AutoApplyOptionalExtras,
 } from "../lib/autoApplyEnrollmentExtras";
 import { WEEKDAYS } from "../lib/enrollmentFormUtils";
+import { useAuth } from "../contexts/AuthContext";
 import Navigation from "./Navigation";
 import {
   FormCard,
@@ -59,6 +60,7 @@ const EMPTY_FORM: FormState = {
 function AutoApplyThreeStepFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, isLoading: authLoading } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [extras, setExtras] = useState<AutoApplyOptionalExtras>(EMPTY_OPTIONAL_EXTRAS);
@@ -72,6 +74,20 @@ function AutoApplyThreeStepFormInner() {
   >({});
   const childDobRef = useRef<HTMLInputElement | null>(null);
   const preferredStartDateRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    clearAutoApplyPending();
+  }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      const current = `${window.location.pathname}${window.location.search}`;
+      window.location.replace(
+        `/login?redirect=${encodeURIComponent(current)}`
+      );
+    }
+  }, [user, authLoading]);
 
   useEffect(() => {
     const idsFromQuery =
@@ -97,6 +113,7 @@ function AutoApplyThreeStepFormInner() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (authLoading || !user) return;
     let isMounted = true;
     const loadCredits = async () => {
       setIsLoadingCredits(true);
@@ -120,7 +137,7 @@ function AutoApplyThreeStepFormInner() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user, authLoading]);
 
   const reviewSections = useMemo(
     () => buildAutoApplyReviewSections(form, extras),
@@ -341,6 +358,17 @@ function AutoApplyThreeStepFormInner() {
     setSubmitError(null);
     router.push("/payment/checkout");
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="mt-3 text-sm text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f4f6fb]">

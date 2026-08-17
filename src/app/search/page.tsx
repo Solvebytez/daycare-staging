@@ -512,6 +512,20 @@ function SearchPageContent() {
     autoApplyHydratedRef.current = true;
   }, [filtersInitialized, searchParams]);
 
+  // Guest Auto Apply → login currently can land back on /search. Continue to the form.
+  useEffect(() => {
+    if (typeof window === "undefined" || !user || authLoading) return;
+    const pending = readAutoApplyPending();
+    const ids = (pending?.selectedDaycareIds || [])
+      .map((id) => String(id).trim())
+      .filter(Boolean);
+    if (ids.length === 0) return;
+    clearAutoApplyPending();
+    router.replace(
+      `/parent-details?selectedIds=${encodeURIComponent(ids.join(","))}`
+    );
+  }, [user, authLoading, router]);
+
   // Persist selection across refresh (cleared when URL/filters no longer match or list empty)
   useEffect(() => {
     if (!filtersInitialized || typeof window === "undefined") return;
@@ -1497,16 +1511,20 @@ function SearchPageContent() {
 
     if (user) {
       const selectedIdsParam = encodeURIComponent(idsToSend.join(","));
-      router.push(`/parent-details?selectedIds=${selectedIdsParam}`);
+      const formUrl = `/parent-details?selectedIds=${selectedIdsParam}`;
+      router.push(formUrl);
       return;
     }
+
+    const selectedIdsParam = encodeURIComponent(idsToSend.join(","));
+    const formUrl = `/parent-details?selectedIds=${selectedIdsParam}`;
 
     saveAutoApplyPending({
       returnUrl,
       selectedDaycareIds: idsToSend,
     });
-    saveRedirectUrl(returnUrl);
-    router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
+    saveRedirectUrl(formUrl);
+    router.push(`/login?redirect=${encodeURIComponent(formUrl)}`);
   }, [
     autoApplySelectedIds,
     blockedAutoApplyDaycareIds,

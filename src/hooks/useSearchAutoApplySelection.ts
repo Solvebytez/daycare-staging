@@ -143,9 +143,11 @@ export function useSearchAutoApplySelection({ user, authLoading }: AuthSlice) {
 
     const returnUrl = readLastSearchUrl();
 
+    const selectedIdsParam = encodeURIComponent(idsToSend.join(","));
+    const formUrl = `/parent-details?selectedIds=${selectedIdsParam}`;
+
     if (user) {
-      const selectedIdsParam = encodeURIComponent(idsToSend.join(","));
-      router.push(`/parent-details?selectedIds=${selectedIdsParam}`);
+      router.push(formUrl);
       return;
     }
 
@@ -154,11 +156,11 @@ export function useSearchAutoApplySelection({ user, authLoading }: AuthSlice) {
       selectedDaycareIds: idsToSend,
     });
     try {
-      localStorage.setItem("searchRedirectUrl", returnUrl);
+      localStorage.setItem("searchRedirectUrl", formUrl);
     } catch {
       /* ignore */
     }
-    router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
+    router.push(`/login?redirect=${encodeURIComponent(formUrl)}`);
   }, [selectedIds, blockedDaycareIds, user, authLoading, router]);
 
   return {
